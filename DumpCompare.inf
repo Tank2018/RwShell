@@ -1,0 +1,60 @@
+[Defines]
+  INF_VERSION                    = 0x00010017
+  BASE_NAME                      = Dump
+  FILE_GUID                      = 99a59ca7-13d4-4650-9389-6f1ed44ec4b9
+  VERSION_STRING                 = 1.0
+  MODULE_TYPE                    = UEFI_APPLICATION
+  ENTRY_POINT                    = DumpEntryPoint
+
+[Sources]
+  Xml.c
+  Xml.h
+  LsPci.c
+  LsPci.h
+  Debug.c
+  Debug.h
+  String.c
+  String.h
+  main.c
+  PciId.c
+  PciId.h
+  MB.c
+  MB.h
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  ShellPkg/ShellPkg.dec
+
+[LibraryClasses]
+  IoLib
+  PcdLib
+  BaseLib
+  UefiLib
+  PrintLib
+  BaseMemoryLib
+  MemoryAllocationLib
+  UefiBootServicesTableLib
+  UefiRuntimeServicesTableLib
+  UefiApplicationEntryPoint
+  ShellLib
+  DevicePathLib
+  
+[Protocols]
+  gEfiShellParametersProtocolGuid
+  gEfiSmbiosProtocolGuid
+  gEfiDriverBindingProtocolGuid
+  gEfiComponentName2ProtocolGuid
+  gEfiComponentNameProtocolGuid
+  gEfiPciIoProtocolGuid
+  gEfiDiskInfoProtocolGuid
+  
+[Guids]
+  gEfiDiskInfoIdeInterfaceGuid
+  gEfiDiskInfoAhciInterfaceGuid
+  gEfiDiskInfoIdeInterfaceGuid
+  gEfiDiskInfoScsiInterfaceGuid
+  gEfiDiskInfoNvmeInterfaceGuid
+
+  
+[Guids]
+
