@@ -3,347 +3,230 @@
 //============================================================
 // Xml String defines									     =
 //============================================================
-/** 
-  function used to clone a new string
-  @param String  -- the string used to been cloned
 
-  @retval New Allocate String, NULL is failed 
-**/
-CHAR8 
-*CloneAsciiString (
-  IN CHAR8    *String
-  )
-{
-  CHAR8           *p; 
-  if (String == NULL) { //safety check
-    XML_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
-    return NULL;
-  }
-  p = (CHAR8 *) AllocateZeroPool (AsciiStrSize (String));
-  if (p == NULL) {//safety check
-    XML_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
-    return NULL;
-  }
-  CopyMem (p, String, AsciiStrLen (String));
-
-  return p;
-}
 
 
 UINTN 
 Xml_Calc_Escape_String_Length (
-  IN CHAR8    *str, 
-  IN BOOLEAN  attribute
+  IN CHAR8    *pStr, 
+  IN BOOLEAN  Attribute
   )
 {
   UINTN    i    = 0;
-  UINTN    size = 0;
+  UINTN    Size = 0;
 
-  if (str == NULL) {
+  if (pStr == NULL) {
     return 0;
   }
-  while (str[i] != '\0')  {
+  while (pStr[i] != '\0')  {
 
-    switch (str[i] ) {
-      case '&':
-        size += AsciiStrLen ("&amp;");
-        break;
-      case '<':
-        size += AsciiStrLen ("&lt;");
-        break;
-      case '>':
-        size += AsciiStrLen ("&gt;");
-        break;
+    switch (pStr[i] ) {
+      //case '&':
+      //  Size += AsciiStrLen ("&amp;");
+      //  break;
+      //case '<':
+      //  Size += AsciiStrLen ("&lt;");
+      //  break;
+      //case '>':
+      //  Size += AsciiStrLen ("&gt;");
+      //  break;
       case '\"':
-        if (attribute)
-          size += AsciiStrLen ("&quot;");
+        if (Attribute)
+          Size += AsciiStrLen ("&quot;");
         else
-          size += AsciiStrLen ("\"");
+          Size += AsciiStrLen ("\"");
         break;
       case '\'':
-        if (attribute)
-          size += AsciiStrLen ("&apos;");
+        if (Attribute)
+          Size += AsciiStrLen ("&apos;");
         else
-          size += AsciiStrLen ("\'");
+          Size += AsciiStrLen ("\'");
         break;
 
       default:
-        size ++;
+        Size ++;
         break;
     }
     i++;
   }
-  return size;
+  return Size;
 }
 
 /** 
   escape some "<","&"..... string
-  @param str          -- the str 
-  @param attribute
+  @param pStr             -- the string pointer 
+  @param IsAttribute      -- is it a attribute
 
   @retval NULL if failed, escape string will return
 **/
 CHAR8 *
 Xml_Escape_String (
-  IN CHAR8    *str, 
-  IN BOOLEAN  attribute
+  IN CHAR8            *pStr, 
+  IN BOOLEAN          IsAttribute
   )
 {
-  UINTN    i, j, size;
-  CHAR8    *t;
+  UINTN    i;
+  UINTN    j;
+  UINTN    Size;
+  CHAR8    *pString;
 
-  if (str == NULL) { //safety check
+  if (pStr == NULL) { //safety check
     return NULL;
   }
   //
   // calc the escape string length, if matched with org, just return org string
   //
-  size = Xml_Calc_Escape_String_Length (str, attribute);
-  if (size == AsciiStrLen (str)) {
-    return str;
+  Size = Xml_Calc_Escape_String_Length (pStr, IsAttribute);
+  if (Size == AsciiStrLen (pStr)) {
+    return pStr;
   }
 
-  t = (CHAR8 *)AllocateZeroPool (size);
-  if (t == NULL) { //safety check
+  pString = (CHAR8 *)AllocateZeroPool (Size);
+  if (pString == NULL) { //safety check
     return NULL; 
   }
   i = 0;
   j = 0;
-  while (str[i] != '\0') {
+  while (pStr[i] != '\0') {
 
-    switch (str[i]) {
+    switch (pStr[i]) {
 
-      case '&':
-        CopyMem (t+j, "&amp;", AsciiStrLen ("&amp;"));
-        j += AsciiStrLen ("&amp;");
-        break;
-      case '<':
-        CopyMem (t+j, "&lt;", AsciiStrLen ("&lt;"));
-        j += AsciiStrLen ("&lt;");
-        break;
-      case '>':
-        CopyMem (t+j, "&gt;", AsciiStrLen ("&gt;"));
-        j += AsciiStrLen ("&gt;");
-        break;
+      //case '&':
+      //  CopyMem (pString+j, "&amp;", AsciiStrLen ("&amp;"));
+      //  j += AsciiStrLen ("&amp;");
+      //  break;
+      //case '<':
+      //  CopyMem (pString+j, "&lt;", AsciiStrLen ("&lt;"));
+      //  j += AsciiStrLen ("&lt;");
+      //  break;
+      //case '>':
+      //  CopyMem (pString+j, "&gt;", AsciiStrLen ("&gt;"));
+      //  j += AsciiStrLen ("&gt;");
+      //  break;
       case '\"':
-        if (attribute) {
-          CopyMem (t+j, "&quot;", AsciiStrLen ("&quot;"));
+        if (IsAttribute) {
+          CopyMem (pString+j, "&quot;", AsciiStrLen ("&quot;"));
           j += AsciiStrLen ("&quot;");
         } else {
-          CopyMem (t+j, "\"", AsciiStrLen ("\""));
+          CopyMem (pString+j, "\"", AsciiStrLen ("\""));
           j += AsciiStrLen ("\"");
         }
         break;
       case '\'':
-        if (attribute) {
-          CopyMem (t+j, "&apos;", AsciiStrLen ("&apos;"));
+        if (IsAttribute) {
+          CopyMem (pString+j, "&apos;", AsciiStrLen ("&apos;"));
           j += AsciiStrLen ("&apos;");
         } else {
-          CopyMem (t+j, "\"", AsciiStrLen ("\""));
+          CopyMem (pString+j, "\"", AsciiStrLen ("\""));
           j += AsciiStrLen ("\"");
         }
         break;
 
       default:
-        t[j] = str[i];
+        pString[j] = pStr[i];
         j++;
         break;
 
     }
     i++;
   }
-  t[j] = '\0';
+  pString[j] = '\0';
 
-  return t;
+  return pString;
 }
 
-/**
-  [ATTENTION] This function will be deprecated for security reason.
-
-  Copies one Null-terminated ASCII string to another Null-terminated ASCII
-  string and returns the new ASCII string.
-
-  This function copies the contents of the ASCII string Source to the ASCII
-  string Destination, and returns Destination. If Source and Destination
-  overlap, then the results are undefined.
-
-  If Destination is NULL, then ASSERT().
-  If Source is NULL, then ASSERT().
-  If Source and Destination overlap, then ASSERT().
-  If PcdMaximumAsciiStringLength is not zero and Source contains more than
-  PcdMaximumAsciiStringLength ASCII characters, not including the Null-terminator,
-  then ASSERT().
-
-  @param  Destination A pointer to a Null-terminated ASCII string.
-  @param  Source      A pointer to a Null-terminated ASCII string.
-
-  @return Destination
-
-**/
-CHAR8 *
-EFIAPI
-Xml_Ascii_Str_Cpy (
-  OUT     CHAR8                     *Destination,
-  IN      CONST CHAR8               *Source
-  )
-{
-  CHAR8                             *ReturnValue;
-
-  //
-  // Destination cannot be NULL
-  //
-  ASSERT (Destination != NULL);
-
-  //
-  // Destination and source cannot overlap
-  //
-  ASSERT ((UINTN)(Destination - Source) > AsciiStrLen (Source));
-  ASSERT ((UINTN)(Source - Destination) > AsciiStrLen (Source));
-
-  ReturnValue = Destination;
-  while (*Source != 0) {
-    *(Destination++) = *(Source++);
-  }
-  *Destination = 0;
-  return ReturnValue;
-}
-/**
-  [ATTENTION] This function will be deprecated for security reason.
-
-  Concatenates one Null-terminated ASCII string to another Null-terminated
-  ASCII string, and returns the concatenated ASCII string.
-
-  This function concatenates two Null-terminated ASCII strings. The contents of
-  Null-terminated ASCII string Source are concatenated to the end of Null-
-  terminated ASCII string Destination. The Null-terminated concatenated ASCII
-  String is returned.
-
-  If Destination is NULL, then ASSERT().
-  If Source is NULL, then ASSERT().
-  If PcdMaximumAsciiStringLength is not zero and Destination contains more than
-  PcdMaximumAsciiStringLength ASCII characters, not including the Null-terminator,
-  then ASSERT().
-  If PcdMaximumAsciiStringLength is not zero and Source contains more than
-  PcdMaximumAsciiStringLength ASCII characters, not including the Null-terminator,
-  then ASSERT().
-  If PcdMaximumAsciiStringLength is not zero and concatenating Destination and
-  Source results in a ASCII string with more than PcdMaximumAsciiStringLength
-  ASCII characters, then ASSERT().
-
-  @param  Destination A pointer to a Null-terminated ASCII string.
-  @param  Source      A pointer to a Null-terminated ASCII string.
-
-  @return Destination
-
-**/
-CHAR8 *
-EFIAPI
-Xml_Ascii_Str_Cat (
-  IN OUT CHAR8    *Destination,
-  IN CONST CHAR8  *Source
-  )
-{
-  Xml_Ascii_Str_Cpy (Destination + AsciiStrLen (Destination), Source);
-
-  //
-  // Size of the resulting string should never be zero.
-  // PcdMaximumUnicodeStringLength is tested inside StrLen().
-  //
-  ASSERT (AsciiStrSize (Destination) != 0);
-  return Destination;
-}
 
 //============================================================
-// Xml Attribute defines								     =
+// Xml Attribute defines								                     =
 //============================================================
 
 /**
-  New a xml attribute
-  @param name  -- the name of the attribute
-  @param value -- the value of the attribute
+  New a xml attribute 
+  @param pName  -- the name of the attribute
+  @param pValue -- the value of the attribute
 
   @retval new xml attribute, null is failed
 **/
-XmlAttribute *
+XML_ATTRIBUTE *
 Xml_Attribute_New (
-  IN CHAR8 *name, 
-  IN CHAR8 *value
+  IN CHAR8                      *pName, 
+  IN CHAR8                      *pValue
   )
 {
-  XmlAttribute *ret;
-  if ((name == NULL) || (value == NULL)) { //safety check
-    XML_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+  XML_ATTRIBUTE           *pAttr;
+  if ((pName == NULL) || (pValue == NULL)) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return NULL;
   }
 
-  ret = (XmlAttribute *) AllocateZeroPool (sizeof(XmlAttribute));
-  if (ret == NULL) { //safety check
-    XML_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+  pAttr = (XML_ATTRIBUTE *) AllocateZeroPool (sizeof(XML_ATTRIBUTE));
+  if (pAttr == NULL) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return NULL;
   }
   
-  ret->Signature = XML_ATTRIBUTE_SIGNATURE;
-  ret->pName  = CloneAsciiString(name);
-  ret->pValue = CloneAsciiString(value);
+  pAttr->Signature = XML_ATTRIBUTE_SIGNATURE;
+  pAttr->pName  = Clone_Ascii_String_WO_SPACE (pName);
+  pAttr->pValue = Clone_Ascii_String_WO_SPACE (pValue);
 
-  return ret;
+  return pAttr;
 }
 
 /**
   Free a xml attribute
-  @param attribute  -- the  attribute pool to free
+  @param pAttribute  -- the  attribute pool to free
 
 **/
 VOID 
 Xml_Attribute_Destroy (
-  IN XmlAttribute * attribute
+  IN XML_ATTRIBUTE      *pAttribute
   )
 {
-  if (attribute == NULL) { //safety check
-    XML_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+  if (pAttribute == NULL) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return;
   }
-  if (attribute->pName  != NULL)   FreePool (attribute->pName);
-  if (attribute->pValue != NULL)   FreePool (attribute->pValue);
-  FreePool (attribute);
+  if (pAttribute->pName  != NULL)   FreePool (pAttribute->pName);
+  if (pAttribute->pValue != NULL)   FreePool (pAttribute->pValue);
+  FreePool (pAttribute);
 }
 
 /**
   get a xml attribute name
-  @param attribute 
+  @param  pAttribute -- the attribute pointer
   
   @retval  xml attribute name string, null is failed
 **/
 CHAR8 *
 Xml_Attribute_Get_Name (
-  IN XmlAttribute * attribute
+  IN XML_ATTRIBUTE           *pAttribute
   )
 {
-  if (attribute == NULL) { //safety check
-    XML_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+  if (pAttribute == NULL) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return NULL;
   }
 
-  return CloneAsciiString (attribute->pName);
+  return Clone_Ascii_String_WO_SPACE (pAttribute->pName);
 }
 
 /**
   get a xml attribute value
-  @param attribute 
+  @param  pAttribute -- the attribute pointer
   
   @retval  xml attribute value string, null is failed
 **/
 CHAR8 *
 Xml_Attribute_Get_Value (
-  IN XmlAttribute * attribute
+  IN XML_ATTRIBUTE           *pAttribute
   )
 {
-  if (attribute == NULL) { //safety check
-    XML_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+  if (pAttribute == NULL) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return NULL;
   }
 
-  return CloneAsciiString(attribute->pValue);
+  return Clone_Ascii_String_WO_SPACE (pAttribute->pValue);
 }
 
 //============================================================
@@ -351,282 +234,268 @@ Xml_Attribute_Get_Value (
 //============================================================
 /**
   New a xml element
-  @param name  -- the name of the element
+  @param pName  -- the name of the element
 
   @retval new xml element, null is failed
 **/
-XmlElement * 
+XML_ELEMENT * 
 Xml_Element_New (
-  IN CHAR8 *name
+  IN CHAR8                        *pName
   )
 {
-  XmlElement    *ret;
+  XML_ELEMENT       *pElt;
 
-  if (name == NULL) { //safety check
-    XML_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+  if (pName == NULL) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return NULL;
   }
 
-  ret = (XmlElement *) AllocateZeroPool (sizeof(XmlElement));
-  if (ret == NULL) { //safety check
-    XML_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+  pElt = (XML_ELEMENT *) AllocateZeroPool (sizeof(XML_ELEMENT));
+  if (pElt == NULL) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return NULL;
   }
-  ret->Signature = XML_ELEMENT_SIGNATURE;
-  ret->pName = CloneAsciiString (name);
-  InitializeListHead (&ret->pAttributes);
-  InitializeListHead (&ret->pChildren);
+  pElt->Signature = XML_ELEMENT_SIGNATURE;
+  pElt->pName = Clone_Ascii_String_WO_SPACE (pName);
+  InitializeListHead (&pElt->Attributes);
+  InitializeListHead (&pElt->Children);
 
-  return ret;
+  return pElt;
 }
 
 /** 
   xml element destroy all attribute under it
-  @param name  -- the element
+  @param pElement  -- the element pointer
+
+  @reval none.
 **/
 VOID
 Xml_Element_Destroy_Attribute (
-  IN XmlElement *element
+  IN  XML_ELEMENT        *pElement
   )
 {
-  LIST_ENTRY      *Link;
-  XmlAttribute    *attribute;
-  if (element == NULL) { //safety check
-    XML_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+  LIST_ENTRY          *Link;
+  XML_ATTRIBUTE       *pAttribute;
+  if (pElement == NULL) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return;
   }
-  Link  = GetFirstNode (&element->pAttributes);
-  while (!IsNull (&element->pAttributes, Link)) {
-    attribute = XML_ATTRIBUTE_FROM_LINK (Link);
-    Link = GetNextNode (&element->pAttributes, Link);
-    Xml_Attribute_Destroy (attribute);
+  //
+  // Destroy all attribute under element
+  //
+  Link  = GetFirstNode (&pElement->Attributes);
+  while (!IsNull (&pElement->Attributes, Link)) {
+    pAttribute = XML_ATTRIBUTE_FROM_LINK (Link);
+    Link = GetNextNode (&pElement->Attributes, Link);
+    Xml_Attribute_Destroy (pAttribute);
   }
 }
 /** 
   xml element destroy 
-  @param name  -- the element
+  @param pElement  -- the element pointer
+
+  @retval none.
 **/
 VOID
 Xml_Element_Destroy_Element (
-  IN XmlElement *element
+  IN  XML_ELEMENT                *pElement
   )
 {
   
-  if (element == NULL) { //safety check
-    XML_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+  if (pElement == NULL) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return;
   }
-  if (element->pName != NULL) {
-    FreePool (element->pName);
+  if (pElement->pName != NULL) {
+    FreePool (pElement->pName);
   }
-  FreePool (element);
+  FreePool (pElement);
 }
 
 /** 
   xml element destroy all child under it
-  @param name  -- the element
+  @param pElement  -- the element pointer
+
+  @retval none.
 **/
 VOID
 Xml_Element_Destroy (
-  IN XmlElement *element
+  IN  XML_ELEMENT                *pElement
   )
 {
-  LIST_ENTRY      *Link;
-  XmlElement      *child;
-  if (element == NULL) { //safety check
-    XML_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+  LIST_ENTRY       *Link;
+  XML_ELEMENT      *pChild;
+  if (pElement == NULL) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return;
   }
-  Xml_Element_Destroy_Attribute (element);
-  Link  = GetFirstNode (&element->pChildren);
-  while (!IsNull (&element->pChildren, Link)) {
-    child = XML_ELEMENT_FROM_LINK (Link);
-    Link = GetNextNode (&element->pChildren, Link);
-    Xml_Element_Destroy_Element (child);
-    Xml_Element_Destroy (child);
+  Xml_Element_Destroy_Attribute (pElement);
+  Link  = GetFirstNode (&pElement->Children);
+  while (!IsNull (&pElement->Children, Link)) {
+    pChild = XML_ELEMENT_FROM_LINK (Link);
+    Link = GetNextNode (&pElement->Children, Link);
+    Xml_Element_Destroy_Element (pChild);
+    Xml_Element_Destroy (pChild);
   }
-  FreePool (element->pName);
-  FreePool (element);
+  FreePool (pElement->pName);
+  FreePool (pElement);
 
 }
 
 /**
   Insert a attribute into a element
-  @param element  -- the element
-  @param attribute  -- the attribute
+  @param pElement        -- the element
+  @param pAttribute      -- the attribute
 
   @retval  xml element, null is failed
 **/
-XmlElement * 
+XML_ELEMENT * 
 Xml_Element_Add_Attribute (
-  IN XmlElement     *element,
-  IN XmlAttribute   *attribute
+  IN  XML_ELEMENT                     *pElement,
+  IN  XML_ATTRIBUTE                   *pAttribute
   )
 {
-  if ((element == NULL) || (attribute == NULL)) { //safety check
-    XML_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+  if ((pElement == NULL) || (pAttribute == NULL)) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return NULL;
   }
   //
   // Insert the attribute into the
   //
-  InsertTailList (&element->pAttributes, &attribute->Link);
+  InsertTailList (&pElement->Attributes, &pAttribute->Link);
 
-  return element;
+  return pElement;
 }
 
 /**
   Insert a child element into a element
-  @param element  -- the element
-  @param attribute  -- the attribute
+  @param pElement           -- the element
+  @param pChild             -- the attribute
   
   @retval  xml element, null is failed
 **/
-XmlElement * 
+XML_ELEMENT * 
 Xml_Element_Add_Child (
-  IN XmlElement     *element,
-  IN XmlElement     *child
+  IN  XML_ELEMENT                     *pElement,
+  IN  XML_ELEMENT                     *pChild
   )
 {
-  if ((element == NULL) || (child == NULL)) { //safety check
-    XML_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+  if ((pElement == NULL) || (pChild == NULL)) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return NULL;
   }
-  //
-  // Insert the child into the
-  //
-  InsertTailList (&element->pChildren, &child->Link);
 
-  return element;
+  //
+  // Insert the child into the root
+  //
+  InsertTailList (&pElement->Children, &pChild->Link);
+
+  return pElement;
 }
 
-/**
-  Insert a element into a element
-  @param element   -- the element
-  @param element1  -- the element
-  
-  @retval  xml element, null is failed
-**/
-XmlElement * 
-Xml_Element_Add_Element (
-  IN XmlElement     *element,
-  IN XmlElement     *element1
-  )
-{
-  if ((element == NULL) || (element1 == NULL)) { //safety check
-    XML_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
-    return NULL;
-  }
-  //
-  // Insert the child into the
-  //
-  InsertTailList (&element->Link, &element->Link);
 
-  return element;
-}
 /**
   get the element attributes list
-  @param element  -- the element
+  @param pElement  -- the element
 
   
   @retval  xml element attributes, null is failed
 **/
 VOID * 
 Xml_Element_Get_Attributes (
-  IN XmlElement   *element
+  IN  XML_ELEMENT               *pElement
   )
 {
-  if (element == NULL) { //safety check
-    XML_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+  if (pElement == NULL) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return NULL;
   }
 
-  return (VOID *) &(element->pAttributes);
+  return (VOID *) &(pElement->Attributes);
 }
 
 /** 
   check if a element's child element is empty or not
-  @param element     -- the element
+  @param pElement     -- the element
 
   @retval TRUE if not empty, FALSE is empty 
 **/
 BOOLEAN 
 Xml_Element_Is_Empty (
-  IN XmlElement  *element
+  IN  XML_ELEMENT               *pElement
   )
 {
-  if (element == NULL) { 
+  if (pElement == NULL) { 
     return FALSE;
   }
 
-  return IsListEmpty (&element->pChildren);
+  return IsListEmpty (&pElement->Children);
 }
 
 /** 
   debug print element to the screen
-  @param element     -- the element
-  @param Indx        -- the indent index
+  @param pElement           -- the element pointer
+  @param IndentIndex        -- the indent index
 
  
 **/
 VOID
 Xml_Element_Debug_Print_Element (
-  IN  XmlElement  *element,
-  IN  UINTN       Indx
+  IN  XML_ELEMENT               *pElement,
+  IN  UINTN                     IndentIndex
   )
 {
-  LIST_ENTRY      *Link;
-  XmlAttribute    *attribute;
-  UINTN           Index;
-  if (element == NULL) { //safety check
-    XML_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+  LIST_ENTRY          *Link;
+  XML_ATTRIBUTE       *pAttr;
+  UINTN               Index;
+  if (pElement == NULL) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return;
   }
-  for (Index = 0; Index < Indx; Index++) {
-    XML_DEBUG ((EFI_D_ERROR, "  "));
+  for (Index = 0; Index < IndentIndex; Index++) {
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "  "));
   }
-  XML_DEBUG ((EFI_D_ERROR, "e:%a\n", element->pName));
+  XML_DEBUG ((DEBUG_LEVEL_ERROR, "e:%a\n", pElement->pName));
 
 
-  Link  = GetFirstNode (&element->pAttributes);
-  while (!IsNull (&element->pAttributes, Link)) {
-    attribute = XML_ATTRIBUTE_FROM_LINK (Link);
-    Link = GetNextNode (&element->pAttributes, Link);
-    for (Index = 0; Index < Indx; Index++) {
-      XML_DEBUG ((EFI_D_ERROR, "  "));
+  Link  = GetFirstNode (&pElement->Attributes);
+  while (!IsNull (&pElement->Attributes, Link)) {
+    pAttr = XML_ATTRIBUTE_FROM_LINK (Link);
+    Link = GetNextNode (&pElement->Attributes, Link);
+    for (Index = 0; Index < IndentIndex; Index++) {
+      XML_DEBUG ((DEBUG_LEVEL_ERROR, "  "));
     }
-    XML_DEBUG ((EFI_D_ERROR, "  a:%a = %a\n", attribute->pName, attribute->pValue));
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "  a:%a = %a\n", pAttr->pName, pAttr->pValue));
   }
 }
 
 /** 
-  debug print element to the screen
+  debug print element  and it's child to the screen
   @param element     -- the element
-  @param Indx        -- the indent index
+  @param Index        -- the indent index
 
  
 **/
 VOID
 Xml_Element_Debug_Print (
-  IN  XmlElement  *element,
-  IN  UINTN       Index
+  IN  XML_ELEMENT               *pElement,
+  IN  UINTN                     Index
   )
 {
 
   LIST_ENTRY      *Link;
-  XmlElement      *child;
-  if (element == NULL) { //safety check
-    XML_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+  XML_ELEMENT     *pChild;
+  if (pElement == NULL) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return;
   }
-  Xml_Element_Debug_Print_Element (element, Index);
+  Xml_Element_Debug_Print_Element (pElement, Index);
   Index ++;
-  Link  = GetFirstNode (&element->pChildren);
-  while (!IsNull (&element->pChildren, Link)) {
-    child = XML_ELEMENT_FROM_LINK (Link);
-    Link = GetNextNode (&element->pChildren, Link);
-    //Xml_Element_Debug_Print_Element (child, Index);
-    Xml_Element_Debug_Print (child, Index);
+  Link  = GetFirstNode (&pElement->Children);
+  while (!IsNull (&pElement->Children, Link)) {
+    pChild = XML_ELEMENT_FROM_LINK (Link);
+    Link = GetNextNode (&pElement->Children, Link);
+    Xml_Element_Debug_Print (pChild, Index);
   }
 }
 
@@ -642,71 +511,118 @@ CHAR8     *close_tag_start = "</";
 /**
  New a xml appendable instance, if is memory type, all data store in memory(memory addr @ ptr)
  if is a file type, all data will store in a file(file name in ptr)
- @param  type  -- the type of xml apppendable
- @param  ptr   -- the ptr of xml appendable
- @param  limit -- the limit size of all appendable xml
+ @param  Type  -- the type of xml apppendable
+ @param  pPtr   -- the ptr of xml appendable
+ @param  Limit -- the limit size of all appendable xml
 
  @retval NULL is failed to new a apppenable xml, a new appendable xml will return
 **/
-XmlAppendable * 
+XML_APPENDABLE * 
 Xml_Appendable_New (
-  IN XmlAppendableType  type, 
-  IN VOID               *ptr, 
-  IN UINTN              limit
+  IN  XML_APPENDABLE_TYPE    Type, 
+  IN  VOID                   *pPtr, 
+  IN  UINTN                  Limit
   )
 {
-  XmlAppendable * ret = (XmlAppendable *) AllocateZeroPool (sizeof (XmlAppendable));
-  if (ret == NULL) { //safety check
-    XML_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+  XML_APPENDABLE        *pAppendable;
+  
+  pAppendable = (XML_APPENDABLE *) AllocateZeroPool (sizeof (XML_APPENDABLE));
+  if (pAppendable == NULL) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return NULL;
   }
 
-  ret->type = type;
-  ret->limit = limit;
-  ret->length = 0; // all string length without the Null-terminated
-  if (type == XML_APPENDABLE_TYPE_MEMORY) {
+  pAppendable->Type = Type;
+  pAppendable->Limit = Limit;
+  pAppendable->Length = 0; // all string length without the Null-terminated
+  if (Type == XML_APPENDABLE_TYPE_MEMORY) {
     //
     // if all data store in memory, just allocate A zero page pool to store the information
     //
-    ret->ptr = AllocatePages (EFI_SIZE_TO_PAGES (limit)); 
-    ZeroMem (ret->ptr, limit);
+    pAppendable->pPtr = AllocatePages (EFI_SIZE_TO_PAGES (Limit)); 
+    ZeroMem (pAppendable->pPtr, Limit);
   } else {
     //
     // // if this file, store it as file name, to do later, tank[TBD]
     //
-    ret->ptr = ptr;
+    pAppendable->pPtr = pPtr;
   }
 
-  return ret;
+  return pAppendable;
+}
+/**
+  Destory a appendable instance
+
+  @param  pAppendable  -- the apppendable pointer
+
+  @retval none.
+**/
+VOID
+Xml_Appendable_Destroy (
+  IN  XML_APPENDABLE  *pAppeandable 
+  )
+{
+  if (pAppeandable == NULL) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    return ;
+  }
+  if (pAppeandable->Type == XML_APPENDABLE_TYPE_MEMORY) {
+    if (pAppeandable->pPtr != NULL) {
+      FreePool (pAppeandable);
+    }
+    FreePool (pAppeandable);
+  }
+}
+/**
+  reset a appendable instance, if is memory type, all data store in memory(memory addr @ ptr)
+
+  @param  pAppendable  -- the apppendable pointer
+
+  @retval NULL is failed to reset a apppenable 
+**/
+XML_APPENDABLE * 
+Xml_Appendable_Reset (
+  IN  XML_APPENDABLE    *pAppendable 
+  )
+{
+  if (pAppendable == NULL) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    return NULL;
+  }
+  if (pAppendable->Type == XML_APPENDABLE_TYPE_MEMORY) {
+    ZeroMem (pAppendable->pPtr, pAppendable->Length);
+    pAppendable->Length = 0;
+  }
+  return pAppendable;
 }
 
 /**
- a xml appendable a char
- @param  appendable  -- the xml apppendable
- @param  c           -- the char
+ a xml appendable append a char
+ @param  pAppendable    -- the xml apppendable
+ @param  Data           -- the char
 
 **/
 VOID 
 Xml_Appendable_Append_Char (
-  IN   XmlAppendable   *appendable, 
-  IN   CHAR8           c
+  IN  XML_APPENDABLE   *pAppendable, 
+  IN  CHAR8            Data
   )
 {
-  if (appendable == NULL) {  //safety check
-    XML_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+  if (pAppendable == NULL) {  //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return;
   }
-  switch (appendable->type)  {
+  switch (pAppendable->Type)  {
 
     case XML_APPENDABLE_TYPE_MEMORY:
-      if (appendable->length >= appendable->limit && appendable->limit != -1)
+      if (pAppendable->Length >= pAppendable->Limit && pAppendable->Limit != -1)
         return;
       //
       // if current ptr is null, allocate a char size ptr to it
       //
-      ((CHAR8 *) appendable->ptr)[appendable->length] = c;
-      ((CHAR8 *) appendable->ptr)[appendable->length+1] = '\0';
-      appendable->length ++;
+      ((CHAR8 *) pAppendable->pPtr)[pAppendable->Length] = Data;
+      ((CHAR8 *) pAppendable->pPtr)[pAppendable->Length+1] = '\0';
+      pAppendable->Length ++;
       break;
     case XML_APPENDABLE_TYPE_FILE:
       // to do later, tank[TBD]
@@ -718,39 +634,44 @@ Xml_Appendable_Append_Char (
 }
 
 /**
- a xml appendable a string
- @param  appendable  -- the xml apppendable
- @param  string      -- the string
+ a xml appendable append a string
+ @param  pAppendable  -- the xml apppendable
+ @param  pString      -- the string
 
 **/
 VOID
 Xml_Appendable_Append_String (
-  IN XmlAppendable  *appendable, 
-  IN CHAR8          *string
+  IN  XML_APPENDABLE   *pAppendable,  
+  IN  CHAR8            *pString
   )
 {
-  UINTN        string_length;
-  if ((appendable == NULL) || (string == NULL)) {  //safety check
-    XML_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+  UINTN        String_Len;
+  if (pAppendable == NULL) {  //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return;
   }
-  switch (appendable->type) {
+  if (pString == NULL) {
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+	//while (1);
+    return;
+  }
+  switch (pAppendable->Type) {
 
     case XML_APPENDABLE_TYPE_MEMORY:
-      if (appendable->length >= appendable->limit && appendable->limit != -1) {
+      if (pAppendable->Length >= pAppendable->Limit && pAppendable->Limit != -1) {
         return;
       }
 
-      string_length = AsciiStrLen (string);
-      if ((appendable->length + string_length > appendable->limit) && (appendable->limit != -1)) {
+      String_Len = AsciiStrLen (pString);
+      if ((pAppendable->Length + String_Len > pAppendable->Limit) && (pAppendable->Limit != -1)) {
         return;
       }
       //
       // to check later if need to copy a limit-length size string
       // when length overlap
       //
-      Xml_Ascii_Str_Cat (appendable->ptr, string);
-      appendable->length = AsciiStrLen (appendable->ptr);
+      Ascii_Str_Cat (pAppendable->pPtr, pString);
+      pAppendable->Length = AsciiStrLen (pAppendable->pPtr);
       break;
     case XML_APPENDABLE_TYPE_FILE:
       // to do later
@@ -764,184 +685,198 @@ Xml_Appendable_Append_String (
 
 /** 
   append a indent if current is child
-  @param writer  -- the writer 
-
-
+  @param  pAppendable  -- the xml apppendable
+  @param  pWriter      -- the writer 
 **/
 VOID
 Xml_Appendable_Writer_Indent (
-  IN XmlAppendable *appendable,
-  IN XmlWriter      *writer
+  IN  XML_APPENDABLE     *pAppendable,
+  IN  XML_WRITER         *pWriter
   )
 {
-  UINTN i;
-  if (writer == NULL) {  //safety check
-    XML_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+  UINTN  Index;
+  if ((pWriter == NULL) || (pAppendable == NULL)) {  //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return;
   }
-  for (i = 0; i < writer->indent_depth * writer->indent_width; i++)  {
-    Xml_Appendable_Append_Char (appendable, ' '); // indent with space, width default is 2, depth by child depth 
+  for (Index = 0; Index < pWriter->IndentDepth * pWriter->IndentWidth; Index++)  {
+    Xml_Appendable_Append_Char (pAppendable, ' '); // indent with space, width default is 2, depth by child depth 
   }
 }
 
 /** 
   append one attribute into string
-  @param appendable  -- the appendable 
-  @param attribute   -- the atrribute used to been append
+  @param pAppendable  -- the appendable 
+  @param pAttribute   -- the atrribute used to been append
   
 **/
 VOID 
 Xml_Appendable_Attribute_Callback (
-  IN XmlAppendable   *appendable, 
-  IN XmlAttribute    *attribute
+  IN  XML_APPENDABLE     *pAppendable,
+  IN  XML_ATTRIBUTE      *pAttribute
   )
 {
-  CHAR8  *escaped_value;
+  CHAR8  *EscapedString;
 
-  if ((appendable == NULL) || (attribute == NULL)) {  //safety check
-    XML_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+  if ((pAppendable == NULL) || (pAttribute == NULL)) {  //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return;
   }
-  Xml_Appendable_Append_Char (appendable, ' '); // ap a space
+  Xml_Appendable_Append_Char (pAppendable, ' '); // ap a space
   
   //
   // attr="xxx"
   // 
-  Xml_Appendable_Append_String (appendable, attribute->pName); // ap the attribute name
-  Xml_Appendable_Append_Char (appendable, '='); 
-  Xml_Appendable_Append_Char (appendable, '\"');
+  Xml_Appendable_Append_String (pAppendable, pAttribute->pName); // ap the attribute name
+  Xml_Appendable_Append_Char (pAppendable, '='); 
+  Xml_Appendable_Append_Char (pAppendable, '\"');
 
-  escaped_value = Xml_Escape_String (attribute->pValue, TRUE);
-  Xml_Appendable_Append_String (appendable, escaped_value);
-  FreePool (escaped_value);
+  EscapedString = Xml_Escape_String (pAttribute->pValue, TRUE);
+  Xml_Appendable_Append_String (pAppendable, EscapedString);
+  //Xml_Appendable_Append_String (appendable, attribute->pValue);
+  FreePool (EscapedString);
 
-  Xml_Appendable_Append_Char (appendable, '\"');
+  Xml_Appendable_Append_Char (pAppendable, '\"');
 }
 
 
 /** 
   append element attribute list into string
-  @param appendable  -- the appendable 
-  @param element     -- the atrribute used to been append
+
+  @param  pAppendable   -- the appendable 
+  @param  pElement      -- the atrribute used to been append
   
 **/
 VOID 
 Xml_Appendable_Element_Attributes (
-  IN XmlAppendable      *appendable, 
-  IN XmlElement         *element
+  IN  XML_APPENDABLE      *pAppendable, 
+  IN  XML_ELEMENT         *pElement
   )
 {
-  LIST_ENTRY      *Link;
-  XmlAttribute    *attribute;
-  if ((appendable == NULL) || (element == NULL)) {  //safety check
-    XML_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+  LIST_ENTRY            *Link;
+  XML_ATTRIBUTE         *pAttr;
+  if ((pAppendable == NULL) || (pElement == NULL)) {  //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return;
   } 
 
-  Link  = GetFirstNode (&element->pAttributes);
-  while (!IsNull (&element->pAttributes, Link)) {
-    attribute = XML_ATTRIBUTE_FROM_LINK (Link);
-    Link = GetNextNode (&element->pAttributes, Link);
-    Xml_Appendable_Attribute_Callback (appendable, attribute);
+  Link  = GetFirstNode (&pElement->Attributes);
+  while (!IsNull (&pElement->Attributes, Link)) {
+    pAttr = XML_ATTRIBUTE_FROM_LINK (Link);
+    Link = GetNextNode (&pElement->Attributes, Link);
+    Xml_Appendable_Attribute_Callback (pAppendable, pAttr);
   }
   return;
 }
 
 /** 
   append element attribute list into string
-  @param appendable  -- the appendable 
-  @param element     -- the atrribute used to been append
+  @param  pWriter      -- the writer 
+  @param  pAppendable  -- the appendable 
+  @param  pElement     -- the atrribute used to been append
   
 **/
 VOID 
 Xml_Appendable_Element (
-  IN XmlWriter              *writer, 
-  IN XmlAppendable          *appendable, 
-  IN XmlElement             *element
+  IN XML_WRITER              *pWriter, 
+  IN XML_APPENDABLE          *pAppendable, 
+  IN XML_ELEMENT             *pElement
   )
 {
   LIST_ENTRY         *Link;
-  XmlElement         *child;
+  XML_ELEMENT        *pChild;
 
-  if ((writer == NULL) || (appendable == NULL) || (element == NULL)) {  //safety check
-    XML_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+  if ((pWriter == NULL) || (pAppendable == NULL) || (pElement == NULL)) {  //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return;
   } 
-  Xml_Appendable_Writer_Indent (appendable, writer);
-  Xml_Appendable_Append_Char (appendable, '<');
-  Xml_Appendable_Append_String (appendable, element->pName);
+  Xml_Appendable_Writer_Indent (pAppendable, pWriter);
+  Xml_Appendable_Append_Char (pAppendable, '<');
+  Xml_Appendable_Append_String (pAppendable, pElement->pName);
+
+  Xml_Appendable_Element_Attributes (pAppendable, pElement); //TANK_END
 
 
-  Xml_Appendable_Element_Attributes (appendable, element); //TANK_END
 
-
-
-  if (Xml_Element_Is_Empty (element))  { // if the element have none child
-    Xml_Appendable_Append_String (appendable, empty_tag_end);
+  if (Xml_Element_Is_Empty (pElement))  { // if the element have none child
+    Xml_Appendable_Append_String (pAppendable, empty_tag_end);
   } else {
-    Xml_Appendable_Append_String (appendable, standard_tag_end);
-
-    writer->indent_depth++;
-    Link  = GetFirstNode (&element->pChildren);
-    while (!IsNull (&element->pChildren, Link)) {
-      child = XML_ELEMENT_FROM_LINK (Link);
-      Link = GetNextNode (&element->pChildren, Link);
-      Xml_Appendable_Element (writer, appendable, child);
+    Xml_Appendable_Append_String (pAppendable, standard_tag_end);
+    
+    pWriter->IndentDepth++;
+    Link  = GetFirstNode (&pElement->Children);
+    while (!IsNull (&pElement->Children, Link)) {
+      pChild = XML_ELEMENT_FROM_LINK (Link);
+      Link = GetNextNode (&pElement->Children, Link);
+      Xml_Appendable_Element (pWriter, pAppendable, pChild);
     }
-    writer->indent_depth--;
-    Xml_Appendable_Writer_Indent (appendable, writer);
-    Xml_Appendable_Append_String (appendable, close_tag_start);
-    Xml_Appendable_Append_String (appendable, element->pName);
-    Xml_Appendable_Append_String(appendable, standard_tag_end);
+    pWriter->IndentDepth--;
+    Xml_Appendable_Writer_Indent (pAppendable, pWriter);
+    Xml_Appendable_Append_String (pAppendable, close_tag_start);
+    Xml_Appendable_Append_String (pAppendable, pElement->pName);
+    Xml_Appendable_Append_String (pAppendable, standard_tag_end);
     
   }
-  //XML_DEBUG ((EFI_D_ERROR, "%a\n", element->pName));
+
   return;
 }
+/**
+  new a xml write instance
 
-XmlWriter * 
+**/
+XML_WRITER * 
 Xml_Writer_New (
   VOID
   )
 {
-  XmlWriter * ret = (XmlWriter *) AllocateZeroPool (sizeof(XmlWriter));
+  XML_WRITER   *pWriter;
+  
+  pWriter = (XML_WRITER *) AllocateZeroPool (sizeof(XML_WRITER));
+  if (pWriter == NULL) {  //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    return NULL;
+  } 
 
+  pWriter->IndentDepth = 0;
+  pWriter->IndentWidth = 2;
 
-  ret->indent_depth = 0;
-  ret->indent_width = 2;
-
-  return ret;
+  return pWriter;
 }
 
-
+/** 
+  append element and attribute into document then into string
+  @param  pAppendable  -- the appendable 
+  @param  pElement     -- the atrribute used to been append
+  
+**/
 VOID  
 Xml_Appendable_Write_Document (
-  IN XmlAppendable          *appendable, 
-  IN XmlDocument            *document
+  IN  XML_APPENDABLE          *pAppendable, 
+  IN  XML_DOCUMENT            *pDocument
   )
 {
 
-  XmlWriter     *writer;
-  CHAR8         t[100];
-  if (document == NULL) {  //safety check
-    XML_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+  XML_WRITER     *pWriter;
+  CHAR8          Temp[100];
+  if ((pDocument == NULL) || (pAppendable == NULL)) {  //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return;
   } 
   
-  ZeroMem (t, 100);
+  ZeroMem (Temp, 100);
   AsciiSPrint (
-    t,
+    Temp,
     100,
     "<?xml version=\"%a\" encoding=\"%a\"?>\n",
-    document->pVersion,
-    document->pEncoding
+    pDocument->pVersion,
+    pDocument->pEncoding
     );
-  //XML_DEBUG ((EFI_D_ERROR, "%a(%d) safety check\n", __FUNCTION__, __LINE__));
-  Xml_Appendable_Append_String (appendable, t); 
+  //XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check\n", __FUNCTION__, __LINE__));
+  Xml_Appendable_Append_String (pAppendable, Temp); 
 
-  writer = Xml_Writer_New ();
+  pWriter = Xml_Writer_New ();
 
-  Xml_Appendable_Element (writer, appendable, Xml_Document_Get_Root (document));
+  Xml_Appendable_Element (pWriter, pAppendable, Xml_Document_Get_Root (pDocument));
 
   //TO DO LATER tank[TBD] FreePool (appendable);
 }
@@ -955,211 +890,1136 @@ Xml_Appendable_Write_Document (
 
   @retval new xml element, null is failed
 **/
-XmlDocument * 
+XML_DOCUMENT * 
 Xml_Document_New (
   VOID
   )
 {
-  XmlDocument * ret = (XmlDocument *) AllocateZeroPool (sizeof (XmlDocument));
-  if (ret == NULL) { //safety check
-    XML_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+  XML_DOCUMENT    *pDocument;
+  pDocument = (XML_DOCUMENT *) AllocateZeroPool (sizeof (XML_DOCUMENT));
+  if (pDocument == NULL) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return NULL;
   }
 
-  ret->pEncoding = CloneAsciiString ("UTF-8");
-  ret->pVersion = CloneAsciiString ("1.0");
-  ret->pRoot = Xml_Element_New ("root");
+  pDocument->pEncoding = Clone_Ascii_String_WO_SPACE ("UTF-8");
+  pDocument->pVersion = Clone_Ascii_String_WO_SPACE ("1.0");
+  pDocument->pRoot = Xml_Element_New ("root");
 
-  return ret;
+  return pDocument;
 }
 
 /**
   New a xml document with root input
-  @param root  -- the root element
+  @param pRoot  -- the root element
 
   @retval new xml element, null is failed
 **/
-XmlDocument * 
+XML_DOCUMENT * 
 Xml_Document_New_With_Root (
-  IN XmlElement  *root
+  IN XML_ELEMENT    *pRoot
   )
 {
-  XmlDocument *ret;
-  if (root == NULL) { //safety check
-    XML_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+  XML_DOCUMENT    *pDocument;
+  if (pRoot == NULL) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return NULL;
   }
 
-  ret = (XmlDocument *) AllocateZeroPool (sizeof (XmlDocument));
-  if (ret == NULL) { //safety check
-    XML_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+  pDocument = (XML_DOCUMENT *) AllocateZeroPool (sizeof (XML_DOCUMENT));
+  if (pDocument == NULL) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return NULL;
   }
 
-  ret->pEncoding = CloneAsciiString("UTF-8");
-  ret->pVersion = CloneAsciiString("1.0");
-  ret->pRoot = root;
+  pDocument->pEncoding = Clone_Ascii_String_WO_SPACE("UTF-8");
+  pDocument->pVersion = Clone_Ascii_String_WO_SPACE("1.0");
+  pDocument->pRoot = pRoot;
 
-  return ret;
+  return pDocument;
 }
 
 /**
   return a xml document  root element
-  @param document  -- the document
+  @param pDocument  -- the document
 
   @retval  document element, null is failed
 **/
-XmlElement * 
+XML_ELEMENT * 
 Xml_Document_Get_Root (
-  IN XmlDocument *document
+  IN  XML_DOCUMENT     *pDocument
   )
 {
-  if (document == NULL) { //safety check
-    XML_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+  if (pDocument == NULL) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return NULL;
   }
 
-  return document->pRoot;
+  return pDocument->pRoot;
 }
 //============================================================
-// Xml File defines                                          =
+// Xml Token defines                                         =
 //============================================================
 
 /**
+  new a xml token instance 
+  @param  pData       -- the string
+  @param  TokenType   -- the token type
 
-    this function is used to read file under efi shell by file name.
-
-    @param pFileName     - the pointer to the unicode file name.
-    @param pBuff         - the pointer to the file buffer.
-    @param pSize         - the pointer to the size of the file buffer.
-
-    @retval EFI_SUCCESS  - success to read the file
-
+  @retval a xml token will returned if success, others failed
 **/
-EFI_STATUS
-EFIAPI
-Xml_Read_File (
-  IN  CHAR16              *pFileName,
-  IN  OUT CHAR8           **pBuff,
-  IN  OUT UINTN           *pBuffSize
-)
-{
-  EFI_STATUS          Status;
-  SHELL_FILE_HANDLE   Handle;
-  EFI_FILE_INFO       *pFileInfo;
-
-  if ((pFileName == NULL) || (pBuff == NULL) || (pBuffSize == NULL)) {  //safety checking.
-    return EFI_NOT_FOUND;
-  }
-
-  Status = ShellOpenFileByName (pFileName, &Handle, EFI_FILE_MODE_READ, 0);
-
-  if (!EFI_ERROR (Status)) {
-    pFileInfo = ShellGetFileInfo (Handle);
-    if (pFileInfo != NULL) {
-      *pBuffSize = pFileInfo->FileSize + 1;
-      *pBuff = AllocateZeroPool (*pBuffSize);
-      if (*pBuff != NULL) {
-        Status = ShellReadFile (Handle, pBuffSize, *pBuff);
-        if (!EFI_ERROR (Status)) {
-          ShellCloseFile (&Handle);
-          return Status;
-        } else {
-          FreePool (*pBuff);
-          *pBuff = NULL;
-        }
-      }
-    }
-    ShellCloseFile (&Handle);
-  }
-  return EFI_NOT_FOUND;
-}
-
-/**
-
-    this function is used to write file under efi shell by file name.
-
-    @param pFileName      - the pointer to the unicode file name.
-    @param pBuff          - the pointer to the file buffer.
-    @param BuffSize       - the size of the file buffer.
-    @param pFileHandle    - the file handle of the file
-
-
-    @retval EFI_SUCCESS   - success to write the file
-**/
-EFI_STATUS
-Xml_Write_File (
-  IN  CHAR16               *pFileName,
-  IN  CHAR8                *pBuff,
-  IN  UINTN                BuffSize
+XML_TOKEN *
+Xml_Token_New (
+  IN  CHAR8             *pData,
+  IN  XML_TOKEN_TYPE    TokenType
   )
 {
-  EFI_STATUS        Status;
-  SHELL_FILE_HANDLE   Handle;
+  XML_TOKEN              *pToken;
 
-  if ((pFileName == NULL) || (pBuff == NULL) || (BuffSize == 0)) {  //safety checking.
-    return EFI_UNSUPPORTED;
-  }
+  pToken = (XML_TOKEN *) AllocateZeroPool (sizeof (XML_TOKEN));
+  if (pToken == NULL) {
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    return NULL;    
+  } 
+  pToken->TokenType   = TokenType;
+  pToken->pData       = Clone_Ascii_String (pData);
+  pToken->Signature   = XML_TOKEN_SIGNATURE;
+  return pToken;
+}
+/**
+  Forward a char step of tokenizer.
+  @param  pTokenizer  -- the pTokenizer pointer
 
-  Status = ShellOpenFileByName (pFileName, &Handle, EFI_FILE_MODE_READ | EFI_FILE_MODE_WRITE, 0);
-  if (!EFI_ERROR (Status)) {
-    ShellDeleteFile (&Handle);
+  @retval none.
+**/
+VOID 
+Xml_Tokenizer_Forward (
+  IN  XML_TOKENIZER           *pTokenizer
+  )
+{
+  if (pTokenizer == NULL) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    return;
   }
-  Status = ShellOpenFileByName (pFileName, &Handle, EFI_FILE_MODE_READ | EFI_FILE_MODE_WRITE | EFI_FILE_MODE_CREATE, 0);
-  if (! EFI_ERROR(Status)) {
-    Status = ShellWriteFile (Handle, &BuffSize, pBuff);
-    ShellCloseFile (&Handle);
-    if (EFI_ERROR(Status)) {
-      return EFI_UNSUPPORTED;
-    }
-    return EFI_SUCCESS;
+  if (Xml_Tokenizer_Get_Current_Char (pTokenizer) == '\n')  { // a line switch
+    pTokenizer->Line++;
+    pTokenizer->LastLineColumn = pTokenizer->Column;
+    pTokenizer->Column = 0;
   } else {
+    pTokenizer->Column++;
   }
-  return EFI_UNSUPPORTED;
+
+  pTokenizer->Current++;  
+}
+/**
+  Backward a char step of tokenizer.
+  @param  pTokenizer  -- the tokenizer pointer
+
+  @retval none.
+**/
+VOID
+Xml_Tokenizer_Backward (
+  IN  XML_TOKENIZER           *pTokenizer
+  )
+{
+  if (pTokenizer == NULL) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    return ;
+  }
+  pTokenizer->Current--;
+
+  if (pTokenizer->Column == 0)  {
+    pTokenizer->Column = pTokenizer->LastLineColumn;
+    pTokenizer->Line--;
+  } else {
+    pTokenizer->Column--;
+  }
 }
 
+/**
+  Backward a N char step of tokenizer.
+  @param  pTokenizer  -- the tokenizer pointer
+  @param  Number      -- the number of char
+
+  @retval none.
+**/
+VOID
+Xml_Tokenizer_Backward_n (
+  IN  XML_TOKENIZER           *pTokenizer, 
+  IN  UINTN                   Number
+  )
+{
+  UINTN   Index;
+  if ((pTokenizer == NULL) || (Number == 0)) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    return;
+  }
+  for (Index = 0; Index < Number; Index++) {
+    Xml_Tokenizer_Backward (pTokenizer);
+  }
+}
 
 /**
-
-    this function is used to re-write and append string into file under efi shell by file name.
-
-    @param pFileName      - the pointer to the unicode file name.
-    @param pBuff          - the pointer to the file buffer.
-    @param BuffSize       - the size of the file buffer.
-
-    @retval EFI_SUCCESS   - success to re write the file
+  Accept a equal char and forward a char
+  @param  pTokenizer  -- the tokenizer pointer
+  @param  Number      -- the number of char
+ 
+  @retval TRUE if the char matched , others failed
 **/
-EFI_STATUS
-Xml_ReWrite_File (
-  IN  CHAR16               *pFileName,
-  IN  CHAR8                *pBuff,
-  IN  UINTN                pBufSize
+BOOLEAN
+Xml_Tokenizer_Accept (
+  IN  XML_TOKENIZER           *pTokenizer, 
+  IN  CHAR8                   Char
+  )
+{
+  if (pTokenizer == NULL) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    return FALSE;
+  }
+  if (Xml_Tokenizer_Get_Current_Char (pTokenizer) == Char) {
+    Xml_Tokenizer_Forward (pTokenizer);
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+/**
+  Accept a equal char in range and forward a char
+  @param  pTokenizer  -- the tokenizer pointer
+  @param  StartChar   -- the start char
+  @param  EndChar     -- the end char
+  @retval TRUE if the char matched in range, others failed
+**/
+BOOLEAN
+Xml_Tokenizer_Accept_Range (
+  IN  XML_TOKENIZER           *pTokenizer, 
+  IN  CHAR8                   StartChar, 
+  IN  CHAR8                   EndChar
+  )
+{
+  CHAR8 Data; 
+  if (pTokenizer == NULL) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    return FALSE;
+  }
+  Data = Xml_Tokenizer_Get_Current_Char (pTokenizer);
+  if (Data >= StartChar && Data <= EndChar) {
+    Xml_Tokenizer_Forward (pTokenizer);
+    return TRUE;
+  }
+
+  return FALSE;
+
+}
+
+/**
+  Accept a  char if current char is a space and forward this
+  @param  pTokenizer  -- the tokenizer pointer
+ 
+  @retval TRUE if the char matched space, others failed
+**/
+BOOLEAN
+Xml_Tokenizer_Accept_Space (
+  IN  XML_TOKENIZER           *pTokenizer
+  )
+{
+  return Xml_Tokenizer_Accept (pTokenizer, 0x20); //accept space
+}
+
+/**
+  Accept a char if this char is a letter and forward this
+  @param  pTokenizer  -- the tokenizer pointer
+ 
+  @retval TRUE if the char is letter, others failed
+**/
+BOOLEAN
+Xml_Tokenizer_Accept_Any_Letter (
+ IN  XML_TOKENIZER           *pTokenizer
+ )
+{
+  CHAR8    Data; 
+  if (pTokenizer == NULL) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    return FALSE;
+  }
+  Data = Xml_Tokenizer_Get_Current_Char (pTokenizer);
+
+  if ((('a' <= Data) && (Data <= 'z')) || \
+      (('A' <= Data) && (Data <= 'Z')) || \
+      (Data > 0x7F)) { /* considers all values out of ascii-7 to be valid characters */
+
+    Xml_Tokenizer_Forward (pTokenizer);
+    return TRUE;
+  }
+  return FALSE;
+}
+
+/**
+  Expect a string start with tokenizer's current
+  @param  pTokenizer  -- the tokenizer pointer
+  @param  pString     -- the string pointer
+
+  @retval TRUE if the string is matched , others failed
+**/
+BOOLEAN
+Xml_Tokenizer_Expect_String (  
+  IN  XML_TOKENIZER           *pTokenizer, 
+  IN  CHAR8                   *pString
+  )
+{
+  UINTN  Index;
+  UINTN  Size;
+  if ((pTokenizer == NULL) || (pString == NULL)) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    return FALSE;
+  }   
+  Size = AsciiStrLen (pString);
+  for (Index = 0; Index < Size; Index ++) {
+    if (!Xml_Tokenizer_Accept (pTokenizer, pString[Index])) {
+      return FALSE;
+    }
+  }
+  return TRUE;
+}
+/**
+  Accept a string if this string matched input and forward this string
+  @param  pTokenizer  -- the tokenizer pointer
+  @param  pString     -- the string pointer
+
+  @retval TRUE if the char is letter, others failed
+**/
+BOOLEAN
+Xml_Tokenizer_Accept_String (
+  IN  XML_TOKENIZER           *pTokenizer, 
+  IN  CHAR8                   *pString
+  )
+{
+  UINTN  Index;
+  UINTN  Size;
+  if ((pTokenizer == NULL) || (pString == NULL)) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    return FALSE;
+  }   
+  Size = AsciiStrLen (pString);
+  for (Index = 0; Index < Size; Index ++) {
+    if (!Xml_Tokenizer_Accept (pTokenizer, pString[Index])) {
+      Xml_Tokenizer_Backward_n (pTokenizer, Index);
+      return FALSE;
+    }
+  }
+
+  return TRUE;
+}
+/**
+  this function get char from tokenizer by current offset
+  @param  pTokenizer  -- the tokenizer pointer
+
+  @retval 0 means current big than tokenizer size, others will return the current
+          char  
+**/
+CHAR8
+Xml_Tokenizer_Get_Current_Char (
+  IN  XML_TOKENIZER           *pTokenizer
+  )
+{
+  if (pTokenizer == NULL) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    return '\0';
+  }
+  if (pTokenizer->Current >= pTokenizer->StingSize) {
+    return '\0';
+  } else {
+    return pTokenizer->pString[pTokenizer->Current];
+  }
+} 
+/**
+  this function new a instance of tokenizer
+  @param  pString     -- the tokenizer pString pointer
+  @param  StringSize  -- the string size of tokenizer
+
+  @retval NULL is failed, others will return a tokenizer instance  pointer
+**/
+XML_TOKENIZER *
+Xml_Tokenizer_New (
+  IN  CHAR8     *pString,
+  IN  UINTN     StringSize
+  )
+{
+  XML_TOKENIZER           *pTokenizer;
+  if ((pString == NULL) || (StringSize == 0)) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    return NULL;
+  }  
+  pTokenizer = (XML_TOKENIZER *) AllocateZeroPool (sizeof (XML_TOKENIZER));
+  if (pTokenizer == NULL) {
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    return NULL;    
+  } 
+  pTokenizer->pString = pString;
+  pTokenizer->StingSize = StringSize;
+  InitializeListHead (pTokenizer->pTokenList);
+
+  return pTokenizer;
+}
+/**
+  insert a token into token list, build the token number
+  @param  pTokenizer     -- the tokenizer  pointer
+  @param  pToken         -- the pToken tokenizer
+
+  @retval none.
+**/
+VOID
+Xml_Tokenizer_Add_Token (
+  IN  XML_TOKENIZER    *pTokenizer, 
+  IN  XML_TOKEN        *pToken
+  )
+{
+
+  if ((pTokenizer == NULL) || (pToken == 0)) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    return;
+  }
+  pToken->TokenNumber = pTokenizer->TokenNumber; 
+  pTokenizer->TokenNumber ++;
+  InsertTailList (pTokenizer->pTokenList, &pToken->Link);
+}
+/**
+  new a token instancd and insert it into token list, build the token number
+  @param  pTokenizer     -- the tokenizer  pointer
+  @param  Type           -- the pToken tokenizer
+
+  @retval none.
+**/
+VOID
+Xml_Tokenizer_Add_A_New_Token (
+  IN  XML_TOKENIZER    *pTokenizer,
+  IN  XML_TOKEN_TYPE   Type,
+  IN  CHAR8            *pString
+  )
+{
+  XML_TOKEN        *pToken;
+  if (pTokenizer == NULL) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    return;
+  }
+  pToken = (XML_TOKEN *) Xml_Token_New (pString, Type);
+  if (pToken != NULL) {
+    Xml_Tokenizer_Add_Token (pTokenizer, pToken);
+  }
+  return;
+}
+/**
+  prase the indentifier such as tag name, attribute name
+  @param  pTokenizer     -- the tokenizer  pointer
+  @retval none.
+**/
+VOID 
+Xml_Tokenizer_Parse_Identifier (
+  IN  XML_TOKENIZER    *pTokenizer
+  )
+{
+  CHAR8                Data;
+  XML_APPENDABLE        *pAppendable;
+
+  if (pTokenizer == NULL) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    return;
+  }
+  pAppendable = Xml_Appendable_New (
+                  XML_APPENDABLE_TYPE_MEMORY,
+                  NULL,
+                  200
+                  );
+  
+  Data = Xml_Tokenizer_Get_Current_Char (pTokenizer);
+
+  //
+  // Element can't start number or punctuation, we only accept
+  // letter, '_', '.', ':' as first char
+  //
+  if (Xml_Tokenizer_Accept_Any_Letter (pTokenizer) ||  //accept the letter 'a'~'z', 'A'~'Z'
+      Xml_Tokenizer_Accept (pTokenizer, '_') || 
+      Xml_Tokenizer_Accept (pTokenizer, '.') || 
+      Xml_Tokenizer_Accept (pTokenizer, ':')) {
+
+    Xml_Appendable_Append_Char (pAppendable, Data);
+    Data = Xml_Tokenizer_Get_Current_Char (pTokenizer);
+
+    while (Xml_Tokenizer_Accept_Any_Letter (pTokenizer) ||
+      Xml_Tokenizer_Accept_Range (pTokenizer, '0', '9') ||
+      Xml_Tokenizer_Accept (pTokenizer, '-') ||
+      Xml_Tokenizer_Accept (pTokenizer, '_') ||
+      Xml_Tokenizer_Accept (pTokenizer, '.') ||
+      Xml_Tokenizer_Accept (pTokenizer, ':')) {
+      Xml_Appendable_Append_Char (pAppendable, Data);
+      Data = Xml_Tokenizer_Get_Current_Char (pTokenizer);
+    }
+    XML_DEBUG ((DEBUG_LEVEL_INFO, "  XML_TOKEN_TYPE_IDENTIFIER: %a\n", pAppendable->pPtr));
+    Xml_Tokenizer_Add_A_New_Token (pTokenizer, XML_TOKEN_TYPE_IDENTIFIER, pAppendable->pPtr);
+  }
+  if (pAppendable != NULL) {
+    Xml_Appendable_Destroy (pAppendable);
+  }
+}
+
+/**
+  prase arribute text value xx="XXX", get XXX and insert it into token
+  @param  pTokenizer     -- the tokenizer  pointer
+  @retval none.
+**/
+VOID
+Xml_Tokenizer_Prase_Quoted_Text (
+  IN  XML_TOKENIZER    *pTokenizer
+  )
+{
+  XML_APPENDABLE        *pAppendable;
+  CHAR8                Data;
+  if (pTokenizer == NULL) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    return;
+  }
+  pAppendable = Xml_Appendable_New (
+                  XML_APPENDABLE_TYPE_MEMORY,
+                  NULL,
+                  0x200
+                  );
+
+  Data = Xml_Tokenizer_Get_Current_Char (pTokenizer);
+  //
+  // a attribute have text value, must start with '"' and end with '"'
+  //<xxxx  xx="xxx"          > 
+  //
+  while (!Xml_Tokenizer_Accept (pTokenizer, '"')) {
+    Xml_Appendable_Append_Char (pAppendable, Data);
+    //
+    // next
+    //
+    Xml_Tokenizer_Forward (pTokenizer);
+    Data = Xml_Tokenizer_Get_Current_Char (pTokenizer);
+
+    if (Data == '&')  {
+      /**TANK TODO later**/
+    }
+  }
+  XML_DEBUG ((DEBUG_LEVEL_INFO, "  XML_TOKEN_TYPE_QUOTED_STRING:%a\n ", pAppendable->pPtr));
+  Xml_Tokenizer_Add_A_New_Token (pTokenizer, XML_TOKEN_TYPE_QUOTED_STRING, pAppendable->pPtr);
+  if (pAppendable != NULL) {
+    Xml_Appendable_Destroy (pAppendable);
+  }
+}
+
+/**
+  Set current of tokenizer if current meesage is a comment
+  @param  pTokenizer     -- the tokenizer pointer
+
+  @retval none.
+**/
+VOID
+Xml_Tokenizer_Parse_Until_End_Comment (
+  IN  XML_TOKENIZER    *pTokenizer
+  )
+{
+  BOOLEAN  IsInside = TRUE;
+  //<!-- This is a comment --> 
+  do {
+    if (Xml_Tokenizer_Accept_String (pTokenizer, "--")) {
+      if (!Xml_Tokenizer_Accept (pTokenizer, '>')) {
+        pTokenizer->pErrorMsg = "Unexpected '--' sequence within comment";
+      }
+      IsInside = FALSE;
+    } else if (Xml_Tokenizer_Accept (pTokenizer, '\0')) {
+      pTokenizer->pErrorMsg = "Encountered EOF while parsing comment";
+      IsInside = FALSE;
+    } else {
+      Xml_Tokenizer_Forward (pTokenizer);
+    }
+  }
+  while (IsInside);
+}
+
+/**
+  prase char between '>'/'/>' to '<'
+  TBD: Now, just forward. later we may need to add some method to prase specail char
+  @param  pTokenizer   -- the Tokenizer pointer
+
+  @retval  none.
+**/
+VOID
+Xml_Tokenizer_Parse_Non_Tag_Data (
+  IN  XML_TOKENIZER    *pTokenizer
+  )
+{
+  Xml_Tokenizer_Forward (pTokenizer);
+ /*tank to do*/
+}
+/**
+  prase the string in tag, if '>'/'/>' found, means we are out tag
+  @param  pTokenizer   -- the Tokenizer pointer
+  @param  IsInTag      -- In Tag flag.
+  @retval  none.
+**/
+VOID 
+Xml_Tokenizer_Parse_In_Tag (
+  IN  XML_TOKENIZER    *pTokenizer,
+  IN  BOOLEAN          *IsInTag
+  )
+{
+  //
+  // Accept all head space
+  //
+  while (Xml_Tokenizer_Accept_Space (pTokenizer));
+  
+  //
+  //a tag have child and child tag have none child
+  //<xxxx  xx="xxx"          > 
+  //  <xxx  xx="xxx"           />   
+  //</xxxx> 
+  //
+
+  if (Xml_Tokenizer_Accept (pTokenizer, '/')) { //'/' means the end tag start
+    // a tag  with child end with '/' started
+    *IsInTag = FALSE;
+
+    if (Xml_Tokenizer_Accept (pTokenizer, '>')) {//'>' means
+      XML_DEBUG ((DEBUG_LEVEL_INFO, "XML_TOKEN_TYPE_END_EMPTY_TAG\n"));
+      Xml_Tokenizer_Add_A_New_Token (pTokenizer, XML_TOKEN_TYPE_END_EMPTY_TAG, NULL);
+    } else {
+      XML_DEBUG ((DEBUG_LEVEL_ERROR, "Unexpected char '>'\n"));
+      //pTokenizer->error_message = "Unexpected character '%c'";
+    }
+  } else if (Xml_Tokenizer_Accept (pTokenizer, '>')) {
+    // is a tag end without child
+    *IsInTag = FALSE;
+    XML_DEBUG ((DEBUG_LEVEL_INFO, "XML_TOKEN_TYPE_END_TAG\n"));
+    Xml_Tokenizer_Add_A_New_Token (pTokenizer, XML_TOKEN_TYPE_END_TAG, NULL);
+  } else if (Xml_Tokenizer_Accept (pTokenizer, '='))  {
+    // a '=' means there have a attribute
+    Xml_Tokenizer_Add_A_New_Token (pTokenizer, XML_TOKEN_TYPE_EQUALS, NULL);
+    XML_DEBUG ((DEBUG_LEVEL_INFO, "  XML_TOKEN_TYPE_EQUALS\n"));
+  } else if (Xml_Tokenizer_Accept (pTokenizer, '"')) {
+    // a '"' means a start of text
+    Xml_Tokenizer_Prase_Quoted_Text (pTokenizer);
+  } else if (Xml_Tokenizer_Accept_Any_Letter (pTokenizer) || 
+              Xml_Tokenizer_Accept (pTokenizer, '_')) {
+   
+    Xml_Tokenizer_Backward (pTokenizer);
+    Xml_Tokenizer_Parse_Identifier (pTokenizer);
+  } else if (Xml_Tokenizer_Accept (pTokenizer, '<'))  {
+    //<!-- This is a comment --> 
+    if (Xml_Tokenizer_Expect_String (pTokenizer, "!--")) {
+      Xml_Tokenizer_Parse_Until_End_Comment (pTokenizer);
+    }
+  } else {
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "Unexpected char %x\n", Xml_Tokenizer_Get_Current_Char (pTokenizer)));
+    Xml_Tokenizer_Forward (pTokenizer);
+  }
+}
+
+/**
+  prase the string in tag, if '<' found, means we are in tag
+  @param  pTokenizer   -- the Tokenizer pointer
+  @param  IsInTag      -- In Tag flag.
+  @retval  none.
+**/
+VOID
+Xml_Tokenizer_Parse_Out_Tag (
+  IN  XML_TOKENIZER    *pTokenizer,
+  IN  BOOLEAN          *IsInTag
+  )
+{
+  //
+  //a tag have child and child tag have none child
+  //<xxxx  xx="xxx"          > 
+  //  <xxx  xx="xxx"           />   
+  //</xxxx> 
+  //
+  
+  if (Xml_Tokenizer_Accept (pTokenizer, '<')) {
+    Xml_Tokenizer_Print_Current_Line (pTokenizer);
+    //
+    // a "<" found means we need into tag prase
+    //
+    *IsInTag = TRUE;
+
+    if (Xml_Tokenizer_Accept (pTokenizer, '/')) {
+      XML_DEBUG ((DEBUG_LEVEL_INFO, "XML_TOKEN_TYPE_START_END_TAG \n"));
+      //
+      // if a '<' follow with '/' means tag with child end 
+      //
+      Xml_Tokenizer_Add_A_New_Token (pTokenizer, XML_TOKEN_TYPE_START_END_TAG, NULL);
+      Xml_Tokenizer_Parse_Identifier (pTokenizer);
+
+    } else if (Xml_Tokenizer_Accept (pTokenizer, '!')) {
+      /* TANK TODO: */
+
+    } else {
+      //
+      // if it's a tag, parse the tag name into token
+      //
+      Xml_Tokenizer_Add_A_New_Token (pTokenizer, XML_TOKEN_TYPE_START_TAG, NULL);
+      XML_DEBUG ((DEBUG_LEVEL_INFO, "XML_TOKEN_TYPE_START_TAG\n"));
+      Xml_Tokenizer_Parse_Identifier (pTokenizer);
+    }
+  } else {
+    Xml_Tokenizer_Parse_Non_Tag_Data (pTokenizer);
+  }
+}
+
+/**
+  Debug method for print current token start with current
+  @param  pTokenizer   -- the Tokenizer pointer
+
+  @retval  none.
+**/
+VOID
+Xml_Tokenizer_Print_Current_Line (
+  XML_TOKENIZER    *pTokenizer
   ) 
 {
-  EFI_STATUS                  Status;
-  CHAR8                       *Buf;
-  UINTN                       BufSize;
+  UINTN Index;
 
-  UINT8                         *FileBuf;
-  UINTN                       FileSize;
-  Buf        = NULL;
-  BufSize    = 0;
-  if ((pFileName == NULL) || (pBuff == NULL) || (pBufSize == 0)) {  //safety checking.
-    return EFI_UNSUPPORTED;
+  for (Index = pTokenizer->Current; Index < pTokenizer->StingSize; Index++) {
+    if (pTokenizer->pString[Index] == '\n') {
+      pTokenizer->pString[Index] = 0;
+      XML_DEBUG ((DEBUG_LEVEL_INFO, "%a\n", pTokenizer->pString+pTokenizer->Current));
+      pTokenizer->pString[Index] = '\n';
+      break;
+    }
+  } 
+}
+
+/**
+  Debug method for token list
+  @param  pTokenizer   -- the Tokenizer pointer
+
+  @retval  none.
+**/
+VOID
+Xml_Tokenizer_Print (
+  IN  XML_TOKENIZER    *pTokenizer
+  )
+{
+  LIST_ENTRY                            *Link;
+  XML_TOKEN                             *pToken;
+  //
+  // Link all tokens in token list
+  //
+  Link  = GetFirstNode (pTokenizer->pTokenList);
+  while (!IsNull (pTokenizer->pTokenList, Link)) {
+    pToken = XML_TOKEN_FROM_LINK (Link);
+    Link = GetNextNode (pTokenizer->pTokenList, Link);
+    XML_DEBUG ((DEBUG_LEVEL_INFO, "%x ", pToken->TokenType));
+    switch (pToken->TokenType) {
+      case XML_TOKEN_TYPE_START_TAG:
+        XML_DEBUG ((DEBUG_LEVEL_INFO, "XML_TOKEN_TYPE_START_TAG \n"));
+        break;
+      case XML_TOKEN_TYPE_IDENTIFIER:
+        XML_DEBUG ((DEBUG_LEVEL_INFO, "  XML_TOKEN_TYPE_IDENTIFIER:%a \n", pToken->pData));
+        break;
+      case XML_TOKEN_TYPE_EQUALS:
+        XML_DEBUG ((DEBUG_LEVEL_INFO, "  XML_TOKEN_TYPE_EQUALS:= \n"));
+        break;     
+      case XML_TOKEN_TYPE_TEXT:
+        XML_DEBUG ((DEBUG_LEVEL_INFO, "  XML_TOKEN_TYPE_TEXT:%a \n", pToken->pData));
+        break; 
+      case XML_TOKEN_TYPE_END_TAG:
+        XML_DEBUG ((DEBUG_LEVEL_INFO, "XML_TOKEN_TYPE_END_TAG\n\n"));
+        break;      
+      case XML_TOKEN_TYPE_END_EMPTY_TAG:
+        XML_DEBUG ((DEBUG_LEVEL_INFO, "XML_TOKEN_TYPE_END_EMPTY_TAG\n\n"));
+        break;
+      case XML_TOKEN_TYPE_QUOTED_STRING:
+        XML_DEBUG ((DEBUG_LEVEL_INFO, "  XML_TOKEN_TYPE_QUOTED_STRING:%a \n", pToken->pData));
+        break;
+      case XML_TOKEN_TYPE_START_END_TAG:
+        XML_DEBUG ((DEBUG_LEVEL_INFO, "XML_TOKEN_TYPE_START_END_TAG \n\n", pToken->pData));
+        break;
+      default:
+        XML_DEBUG ((DEBUG_LEVEL_INFO, "unkown\n "));
+        break;       
+    }
   }
-  Status = Xml_Read_File (pFileName, &Buf, &BufSize);
-  FileSize = BufSize + pBufSize;
 
+}
 
-  FileBuf = (UINT8 *) AllocateZeroPool (FileSize);
-  AsciiSPrint ((CHAR8 *)FileBuf, FileSize, "%a%a", pBuff, Buf);
-  if (Buf != NULL) {
-    FreePool (Buf);
+/**
+  init the token by xml string.
+  @param  pTokenizer   -- the Tokenizer pointer
+
+  @retval  none.
+**/
+VOID
+Xml_Tokenizer_Tokenize (
+  IN  XML_TOKENIZER    *pTokenizer
+  )
+{
+
+  BOOLEAN  IsInTag = FALSE;
+  //
+  //End when current > string size
+  // 
+  while (pTokenizer->Current < pTokenizer->StingSize) {
+    if (IsInTag) {
+      Xml_Tokenizer_Parse_In_Tag (pTokenizer, &IsInTag);
+    } else {
+      Xml_Tokenizer_Parse_Out_Tag (pTokenizer, &IsInTag);
+    }
   }
 
-  Status = Xml_Write_File (pFileName, (CHAR8 *)FileBuf, FileSize);
-  if (FileBuf != NULL) {
-    FreePool (FileBuf);
+
+}
+//============================================================
+// Xml Read defines                                          =
+//============================================================
+/**
+  function used to get current token by link
+  @param  pReader   -- the reader pointer
+
+  @retval  a xml token will returned, NULL is failed.
+**/
+XML_TOKEN *
+Xml_Reader_Get_Current_Token (
+  IN XML_READER       *pReader 
+  )
+{
+
+  XML_TOKEN        *pToken;
+  if (pReader == NULL) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    return NULL;
   }
-  return Status;
+  pToken = XML_TOKEN_FROM_LINK (pReader->pCurrent);
+
+  return pToken;
+}
+
+/**
+  check a token's type matched with input, if matched, go to next token
+  @param  pReader   -- the reader pointer
+  @param  Type      -- the Xml token type
+  @retval  TRUE if the type is matched, others FALSE
+**/
+BOOLEAN
+Xml_Reader_Accept (
+  IN  XML_READER       *pReader,
+  IN  XML_TOKEN_TYPE   Type
+  )
+{
+  XML_TOKEN        *pToken;
+
+  pToken = Xml_Reader_Get_Current_Token (pReader);
+  if (pToken == NULL) {
+    return FALSE;
+  } 
+
+  XML_DEBUG ((DEBUG_LEVEL_INFO, "Req[%x] Now[%x]\n", Type, pToken->TokenType ));
+
+  if (IsNull (pReader->pXmlTokenList, pReader->pCurrent)) {
+    return FALSE;
+  }
+
+  //
+  // if token type matched, get next token
+  //
+  if (pToken->TokenType == Type) {
+    pReader->pCurrent = GetNextNode (pReader->pXmlTokenList, pReader->pCurrent);
+    pReader->Current++;
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+/**
+  go to next token
+  @param  pReader   -- the reader pointer
+
+  @retval  none.
+**/
+VOID
+Xml_Reader_Accept_Any (
+  IN  XML_READER       *pReader
+  )
+{
+  XML_TOKEN        *pToken;
+
+  pToken = Xml_Reader_Get_Current_Token (pReader);
+  if (pToken == NULL) {
+    return ;
+  } 
+
+  if (IsNull (pReader->pXmlTokenList, pReader->pCurrent)) {
+    return ;
+  }
+
+  pReader->pCurrent = GetNextNode (pReader->pXmlTokenList, pReader->pCurrent);
+
+  pReader->Current++;
+  return ;
+
+}
+
+/**
+  prase the element in xml tokens, if first in, we bypass the whitespace and
+  some special token.
+  @param  pReader   -- the reader pointer
+  @param  First     -- if we are first run in
+  @retval  none.
+**/
+XML_ELEMENT * 
+Xml_Reader_Parse_Element_Imp (
+  IN XML_READER       *pReader, 
+  IN BOOLEAN          First
+  )
+{
+  XML_TOKEN            *pToken;
+  XML_TOKEN            *pCurrent;
+  XML_TOKEN            *pTagNameToken;
+  XML_TOKEN            *pAttrNameToken;
+  XML_TOKEN            *pAttrValueToken;
+  XML_ELEMENT           *pElement;
+  XML_ELEMENT           *pChild;
+  XML_ATTRIBUTE         *pAttr;
+  BOOLEAN              IsInToken = TRUE;
+
+  BOOLEAN              TagIsEmpty = TRUE;
+  if (First)   {
+    /* clear valid whitespace */
+
+    pToken = Xml_Reader_Get_Current_Token (pReader);
+    while (Xml_Reader_Accept (pReader, XML_TOKEN_TYPE_TEXT)) {
+
+      pToken = Xml_Reader_Get_Current_Token (pReader);
+    }
+  }
+  //
+  // a line must start with "<" 
+  //
+  if (!Xml_Reader_Accept (pReader, XML_TOKEN_TYPE_START_TAG))   {
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "Expected '<'\n"));
+    return NULL;
+  }
+  
+  //
+  // after "<" it start with tag name
+  //
+  pTagNameToken = Xml_Reader_Get_Current_Token (pReader);
+  if (!Xml_Reader_Accept (pReader, XML_TOKEN_TYPE_IDENTIFIER)) {
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "Expected tag name identifier\n"));
+    return NULL;
+  }
+
+  pElement = Xml_Element_New (pTagNameToken->pData);
+
+
+  do {
+    //
+    // If tag not end with ">" means it have child tag in it
+    // and out of token
+    //
+    if (Xml_Reader_Accept (pReader, XML_TOKEN_TYPE_END_TAG)) {
+      TagIsEmpty = FALSE;
+      IsInToken = FALSE;
+      continue;
+    }
+    //
+    // If tag not end with "/>" means it have  none child tag in it
+    // and out of token
+    //
+    if (Xml_Reader_Accept (pReader, XML_TOKEN_TYPE_END_EMPTY_TAG)) {
+      TagIsEmpty = TRUE;
+      IsInToken = FALSE;
+      continue;
+    }
+
+
+    pAttrNameToken = Xml_Reader_Get_Current_Token (pReader);
+
+    if (!Xml_Reader_Accept (pReader, XML_TOKEN_TYPE_IDENTIFIER))  {
+      XML_DEBUG ((DEBUG_LEVEL_ERROR, "Expected attribute identifier\n"));
+      return NULL;
+    }
+    if (!Xml_Reader_Accept (pReader, XML_TOKEN_TYPE_EQUALS))
+    {
+      XML_DEBUG ((DEBUG_LEVEL_ERROR, "Expected '='"));
+      return NULL;
+    }
+
+
+    pAttrValueToken = Xml_Reader_Get_Current_Token (pReader);
+    if (!Xml_Reader_Accept (pReader, XML_TOKEN_TYPE_QUOTED_STRING)) {
+      XML_DEBUG ((DEBUG_LEVEL_ERROR, "Expected quoted attribute value\n"));
+      return NULL;
+    }
+    
+
+    //pAttrValueToken = Xml_Reader_Get_Current_Token (pReader);
+    pAttr = Xml_Attribute_New (pAttrNameToken->pData, pAttrValueToken->pData);
+
+    if (pAttr != NULL) {
+      Xml_Element_Add_Attribute (pElement, pAttr);
+    }
+  }  while (IsInToken);
+  //
+  // if tag have none child, just return
+  //
+  if (TagIsEmpty) return pElement;
+
+  while (!Xml_Reader_Accept (pReader, XML_TOKEN_TYPE_START_END_TAG)) {
+    pCurrent = Xml_Reader_Get_Current_Token (pReader);
+
+    if (pCurrent->TokenType == XML_TOKEN_TYPE_START_TAG) {
+      pChild = Xml_Reader_Parse_Element_Imp (pReader, FALSE);
+      if (pChild != NULL) {
+        Xml_Element_Add_Child (pElement, pChild);
+      }
+    } else {
+      Xml_Reader_Accept_Any (pReader);
+    }
+  }
+
+  return pElement;
+}
+/**
+  prase the document in xml tokens
+  Note: now we just calc the document offset
+  @param  StringSize     -- the size of string.
+  @param  pString        -- the string pointer
+  
+  @retval  the end offset of document will returned.
+**/
+XML_ELEMENT * 
+Xml_Reader_Parse_Element (
+  IN UINTN      StringSize,  
+  IN CHAR8      *pString
+  )
+{
+  XML_TOKENIZER     *pTokenizer;
+  XML_READER        *pReader;
+  XML_ELEMENT        *pElement;
+  //
+  // new a tokenizer instance
+  //
+  pTokenizer = Xml_Tokenizer_New (pString, StringSize);
+  
+  if (pTokenizer == NULL) goto ErrExit;
+  //
+  // init the tokenizer 
+  //  
+  Xml_Tokenizer_Tokenize (pTokenizer);
+  Xml_Tokenizer_Print (pTokenizer); //debug
+
+  //
+  // if the list is empty, just return
+  //
+  if (IsListEmpty (pTokenizer->pTokenList))  goto ErrExit;
+
+  //
+  // new a reader instance
+  //
+  pReader = (XML_READER *) AllocateZeroPool (sizeof (XML_READER));
+  if (pReader == NULL) goto ErrExit;
+  //
+  // add a end of file token
+  //
+  Xml_Tokenizer_Add_A_New_Token (pTokenizer, XML_TOKEN_TYPE_END_OF_FILE, NULL);
+  pReader->pXmlTokenList = pTokenizer->pTokenList;
+  pReader->pCurrent = GetFirstNode (pReader->pXmlTokenList);
+  //
+  // prase the string for element
+  //
+  pElement = Xml_Reader_Parse_Element_Imp (pReader, TRUE);
+
+  return pElement;
+ErrExit:
+  //
+  // Free resource here, to do later[T a n k]
+  //
+  return NULL;
+}
+/**
+  prase the document in xml tokens
+  Note: now we just calc the document offset
+  @param  StringSize     -- the size of string.
+  @param  pString        -- the string pointer
+
+  @retval  the end offset of document will returned.
+**/
+UINTN  
+Xml_Reader_Parse_Document (
+  IN UINTN      StringSize,  
+  IN CHAR8      *pString
+  )
+{
+  //XML_DOCUMENT *pDocument;
+  UINTN       Index;
+  BOOLEAN     IsStartFound = FALSE;
+ // UINTN       EndIndex = 0;
+  if ((pString == NULL) || (StringSize == 0)) {
+    return 0;
+  }
+  for (Index = 0; Index < StringSize; Index ++) {
+    if ((pString[Index] == '<') && (pString[Index+1] == '?')) {
+      IsStartFound = TRUE;
+    }
+    if ((pString[Index] == '?') && (pString[Index+1] == '>')) {
+      if (IsStartFound)      break;
+    }
+  }
+  //
+  // To do later
+  //
+  return Index + 2;
+  
+}
+/**
+  prase the xml files
+  Note: now we just calc the document offset
+  @param  pFileName   -- the file name
+
+  @retval  a xml document instance will return, NULL is failed
+**/
+XML_DOCUMENT * 
+Xml_Reader_Parse (
+  IN  CHAR16            *pFileName
+  )
+{
+  XML_DOCUMENT    *pDocument;
+  XML_ELEMENT     *pElement;
+  CHAR8          *FileData;
+  UINTN          FileSize;
+  XML_APPENDABLE  *pAppendable;
+  UINTN          DocumentOffset;
+  //
+  // Read input file data and size
+  //
+  if (EFI_ERROR (File_Read (pFileName, &FileData, &FileSize))) {
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%s file is not found !!!\n", pFileName));
+    return NULL;
+  }
+
+  //
+  // bypass document header
+  //
+  DocumentOffset = Xml_Reader_Parse_Document (FileSize, FileData);
+
+  //
+  // prase element in xml string.
+  //
+  pElement = Xml_Reader_Parse_Element (FileSize-DocumentOffset, FileData+DocumentOffset);
+  pDocument = Xml_Document_New_With_Root (pElement);
+
+  #if 1 //DEBUG
+  pAppendable  = Xml_Appendable_New (
+    XML_APPENDABLE_TYPE_MEMORY,
+    NULL,
+    0x200000);
+    Xml_Appendable_Write_Document (
+    pAppendable,
+    pDocument
+  );
+  File_Write (L"Test.xml", pAppendable->pPtr, AsciiStrLen (pAppendable->pPtr));
+  #endif
+  return pDocument;
 }

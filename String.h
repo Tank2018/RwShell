@@ -6,6 +6,11 @@
 #include <Library/PrintLib.h>
 #include <Library/UefiLib.h>
 #include <Library/DebugLib.h>
+#include <Library/UefiApplicationEntryPoint.h>
+#include <Library/UefiBootServicesTableLib.h>
+#include <Library/UefiRuntimeServicesTableLib.h>
+#include <Library/BaseMemoryLib.h>
+#include <Library/MemoryAllocationLib.h>
 /**
   [ATTENTION] This function will be deprecated for security reason.
 
@@ -139,5 +144,99 @@ EFIAPI
 Unicode_To_Ascii (
   IN      CONST CHAR16              *Source,
   OUT     CHAR8                     *Destination
+  );
+
+/**
+  Guid to ascii string , format as below
+  523DF4C5-289B-49BF-BFAE-5BA3B511F17B
+  @param  Guid          A 16 byte guid.
+
+  @return A guid format string.
+
+**/
+CHAR8 *
+Guid_To_Acsii (
+  IN EFI_GUID   *Guid 
+  );
+
+
+/** 
+  Ascii to unicode string 
+  @param  String          A Ascii String.
+
+  @return A unicode string.
+**/
+CHAR16 *
+Ascii_To_Unicode (
+  IN  CHAR8     *String
+  );
+/**
+    Hex to string 11223344 ==> "11223344"
+    @param  Hex                - the hex
+    @param  InSize             - the hex size
+    @retval CHAR8 *             NULL means failed, hex to string buffer
+**/
+
+CHAR8 *
+Hex_To_String (
+  IN  UINT8       *Hex,
+  IN  UINTN       InSize
+  );
+/**
+    Hex to string
+    @param  Hex                - the hex
+    @param  InSize             - the hex size
+    @retval CHAR8 *             NULL means failed, hex to string buffer
+**/
+CHAR8 *
+Hex_To_String_Order (
+  IN  UINT8       *Hex,
+  IN  UINTN       InSize
+  );
+
+/** 
+  function used to clone a new string
+  @param String  -- the string used to been cloned
+
+  @retval New Allocate String, NULL is failed 
+**/
+CHAR8 *
+Clone_Ascii_String (
+  IN CHAR8    *String
+  );
+/** 
+  function used to clone a new string
+  @param String  -- the string used to been cloned
+
+  @retval New Allocate String, NULL is failed 
+**/
+CHAR8 *
+Clone_Ascii_String_WO_SPACE (
+  IN CHAR8    *String
+  );
+/** 
+  function used to clone a new unicode string
+  @param String  -- the string used to been cloned
+
+  @retval New Allocate String, NULL is failed 
+**/
+CHAR16 *
+Clone_Unicode_String (
+  IN CHAR16    *String
+  );
+/**
+    Hex to format align string
+    00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F
+    10 XX
+    @param  Hex                - the hex
+    @param  InSize             - the hex size
+    @retval CHAR8 *             NULL means failed, hex to string buffer
+**/
+
+CHAR8 *
+Hex_To_String_Space_Format_Align (
+  IN  UINT8       *Hex,
+  IN  UINTN       InSize,
+  IN  UINT8       Align
   );
 #endif

@@ -348,6 +348,6 @@ typedef struct _PciDevice {
 #pragma pack() 
 VOID
 Lspci_Xml_Write (
-  IN XmlElement *pElement
+  IN XML_ELEMENT *pElement
   );
 #endif

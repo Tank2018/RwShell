@@ -182,6 +182,7 @@ Eliminate_Extra_Spaces (
   @return Destination.
 
 **/
+
 CHAR8 *
 EFIAPI
 Unicode_To_Ascii (
@@ -190,21 +191,15 @@ Unicode_To_Ascii (
   )
 {
   CHAR8                               *ReturnValue;
-
-  ASSERT (Destination != NULL);
-
-  //
-  // ASSERT if Source is long than PcdMaximumUnicodeStringLength.
-  // Length tests are performed inside StrLen().
-  //
-  ASSERT (StrSize (Source) != 0);
-
-  //
-  // Source and Destination should not overlap
-  //
-  ASSERT ((UINTN) (Destination - (CHAR8 *) Source) >= StrSize (Source));
-  ASSERT ((UINTN) ((CHAR8 *) Source - Destination) > StrLen (Source));
-
+  if (Source == NULL) {
+    return NULL;
+  } 
+  if (Destination == NULL) { 
+    Destination = (CHAR8 *) AllocateZeroPool (StrSize (Source)/2 + 1); //SAFE add 1
+    if (Destination == NULL) {
+      return NULL;
+    }
+  }
 
   ReturnValue = Destination;
   while (*Source != '\0') {
@@ -212,7 +207,7 @@ Unicode_To_Ascii (
     // If any Unicode characters in Source contain
     // non-zero value in the upper 8 bits, then ASSERT().
     //
-    ASSERT (*Source < 0x100);
+    //ASSERT (*Source < 0x100);
     *(Destination++) = (CHAR8) *(Source++);
   }
 
@@ -222,8 +217,300 @@ Unicode_To_Ascii (
   // ASSERT Original Destination is less long than PcdMaximumAsciiStringLength.
   // Length tests are performed inside AsciiStrLen().
   //
-  ASSERT (AsciiStrSize (ReturnValue) != 0);
+  //ASSERT (AsciiStrSize (ReturnValue) != 0);
 
   return ReturnValue;
+}
+
+/**
+  Guid to ascii string , format as below
+  523DF4C5-289B-49BF-BFAE-5BA3B511F17B
+  @param  Guid          A 16 byte guid.
+
+  @return A guid format string.
+
+**/
+CHAR8 *
+Guid_To_Acsii (
+  IN EFI_GUID   *Guid 
+  )
+{
+  CHAR8   *String;
+  if (Guid == NULL) {
+    return NULL;
+  }
+  String = (CHAR8   *)AllocateZeroPool (0x25);
+  if (String == NULL) {
+    return NULL;
+  }
+  AsciiSPrint (String, 0x42, "%g", Guid);
+  return String;
+  
+}
+
+/** 
+  Ascii to unicode string 
+  @param  String          A Ascii String.
+
+  @return A unicode string.
+**/
+CHAR16 *
+Ascii_To_Unicode (
+  IN  CHAR8     *String
+  )
+{
+  UINTN    Size = 0;
+  UINTN    i = 0;
+  CHAR16   *Unicode;
+  if (String == NULL) {
+    return NULL;
+  }
+  Size = AsciiStrSize (String) * 2;
+  Unicode = (CHAR16 *)AllocateZeroPool (Size);
+  while (String[i] != '\0') {
+    Unicode[i] = (CHAR16) String[i];
+    i ++;
+  }
+
+  return Unicode;
+}
+
+
+CHAR8 mHexDigit[17] = "0123456789ABCDEF";
+/**
+    Hex to string 11223344 ==> "11223344"
+    @param  Hex                - the hex
+    @param  InSize             - the hex size
+    @retval CHAR8 *             NULL means failed, hex to string buffer
+**/
+
+CHAR8 *
+Hex_To_String (
+  IN  UINT8       *Hex,
+  IN  UINTN       InSize
+  )
+{
+  UINTN          Index;
+  UINTN           HexIndex;
+  UINTN          StringSize;
+  CHAR8          *String;
+
+  if (Hex == NULL) { //safety check
+    return NULL;
+  }
+
+  StringSize = InSize * 2 + 1; //1 byte means xx ==> "XX"  + "\0"
+  String = (CHAR8 *) AllocateZeroPool (StringSize);
+  if (String == NULL) {
+    return NULL;
+  }
+
+  HexIndex = 0;
+  Index = StringSize - 1; 
+  do {
+    Index --;
+    String[Index] = mHexDigit[Hex[HexIndex] & 0x0f];
+    Index --;
+    String[Index] = mHexDigit[(Hex[HexIndex] >> 4) & 0x0f];
+    HexIndex ++;
+  } while (HexIndex < InSize);
+  return String;
+}
+/**
+    Hex to string 0x11223344 ==> "0x11223344"
+    @param  Hex                - the hex
+    @param  InSize             - the hex size
+    @retval CHAR8 *             NULL means failed, hex to string buffer
+**/
+
+CHAR8 *
+Hex_To_String_Order (
+  IN  UINT8       *Hex,
+  IN  UINTN       InSize
+  )
+{
+  UINTN          Index;
+  UINTN           HexIndex;
+  UINTN          StringSize;
+  CHAR8          *String;
+
+  if (Hex == NULL) { //safety check
+    return NULL;
+  }
+
+  StringSize = InSize * 2 + 2 + 1; //1 byte means xx ==> "XX" + "0x" + "\0"
+  String = (CHAR8 *) AllocateZeroPool (StringSize);
+  if (String == NULL) {
+    return NULL;
+  }
+
+  HexIndex = 0;
+  Index = StringSize - 1; 
+  do {
+    Index --;
+    String[Index] = mHexDigit[Hex[HexIndex] & 0x0f];
+    Index --;
+    String[Index] = mHexDigit[(Hex[HexIndex] >> 4) & 0x0f];
+    HexIndex ++;
+  } while (HexIndex < InSize);
+  Index --;
+  if (Index != 1) { // index should been 1
+    return NULL;
+  }
+  String[1] = 0x78; // Add "x"
+  String[0] = 0x30; // Add "0"
+  return String;
+}
+
+/**
+    Hex to format align string
+    00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F
+    10 XX
+    @param  Hex                - the hex
+    @param  InSize             - the hex size
+    @retval CHAR8 *             NULL means failed, hex to string buffer
+**/
+
+CHAR8 *
+Hex_To_String_Space_Format_Align (
+  IN  UINT8       *Hex,
+  IN  UINTN       InSize,
+  IN  UINT8       Align
+  )
+{
+  UINTN          Index;
+  UINTN           HexIndex;
+  UINTN          StringSize;
+  CHAR8          *String;
+
+  if ((Hex == NULL) || (InSize == 0)) { //safety check
+    return NULL;
+  }
+
+  StringSize = InSize * 3 +  1; //1 byte means xx ==> "XX"
+  String = (CHAR8 *) AllocateZeroPool (StringSize);
+  if (String == NULL) {
+    return NULL;
+  }
+  SetMem (String, StringSize-1, 0x20); //format all string as space
+  HexIndex = 0;
+  Index = 0;
+
+  do {
+    *(String + Index) = mHexDigit[(Hex[HexIndex] >> 4) & 0x0f];
+    Index ++;
+    *(String + Index) = mHexDigit[Hex[HexIndex] & 0x0f];
+    Index ++;
+
+
+    HexIndex ++;
+    if (HexIndex%Align == 0) { // if align, end with enter
+      *(String + Index) = '\n';//
+    }
+    Index ++; // skip space
+  } while (HexIndex < InSize);
+
+  return String;
+}
+/** 
+  function used to clone a new string
+  @param String  -- the string used to been cloned
+
+  @retval New Allocate String, NULL is failed 
+**/
+CHAR8 *
+Clone_Ascii_String (
+  IN CHAR8    *String
+  )
+{
+  CHAR8           *p; 
+  if (String == NULL) { //safety check
+    return NULL;
+  }
+  p = (CHAR8 *) AllocateZeroPool (AsciiStrSize (String));
+  if (p == NULL) {//safety check
+    return NULL;
+  }
+  CopyMem (p, String, AsciiStrLen (String));
+
+  return p;
+}
+
+/** 
+  function used to clone a new string without '\r' 'n' and reduce space in head
+  @param String  -- the string used to been cloned
+
+  @retval New Allocate String, NULL is failed 
+**/
+CHAR8 *
+Clone_Ascii_String_WO_SPACE (
+  IN CHAR8    *String
+  )
+{
+  CHAR8           *pString;
+  CHAR8           *Temp; 
+  UINTN            Size;
+  if (String == NULL) { //safety check
+    return NULL;
+  }
+  Size = AsciiStrSize (String);
+  pString = (CHAR8 *) AllocateZeroPool (Size);
+  if (pString == NULL) {//safety check
+    return NULL;
+  }
+  CopyMem (pString, String, Size);
+  Temp = pString;
+
+  //
+  // Replace the '\r' & '\n' to space
+  //
+  while (*Temp != '\0') {
+    if ((*Temp == '\r') || (*Temp == '\n')) {
+      *Temp = ' ';
+    }
+    Temp ++;
+  }
+
+  //
+  // point to none-space header
+  //
+  Temp = pString;
+  while (*Temp != '\0') {
+    if (*Temp != 0x20) {
+      break;
+    }
+    Temp ++;
+  }
+
+  //
+  // Reallocate the memory
+  //
+  pString = ReallocatePool (Size, AsciiStrSize(pString), Temp);
+
+  return pString;
+}
+
+/** 
+  function used to clone a new unicode string
+  @param String  -- the string used to been cloned
+
+  @retval New Allocate String, NULL is failed 
+**/
+CHAR16 *
+Clone_Unicode_String (
+  IN CHAR16    *String
+  )
+{
+  CHAR16           *p; 
+  if (String == NULL) { //safety check
+    return NULL;
+  }
+  p = (CHAR16 *) AllocateZeroPool (StrSize (String));
+  if (p == NULL) {//safety check
+    return NULL;
+  }
+  CopyMem (p, String, StrSize (String));
+
+  return p;
 }
 

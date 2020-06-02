@@ -23,7 +23,7 @@
 #include "Xml.h"
 #include "Debug.h"
 #include "String.h"
-#define MB_DEBUG(x) ConOutMsg x
+#define MB_DEBUG(x) Debug_Msg x
 #define ATA_IDENTIFY_DATA_MODE_LEN       40
 #define ATA_IDENTIFY_DATA_SER_LEN        20
 #define VENDOR_IDENTIFICATION_OFFSET     3
@@ -33,6 +33,6 @@
 
 VOID
 MB_Xml_Write (
-  IN XmlElement *pElement
+  IN XML_ELEMENT *pElement
   );
 #endif

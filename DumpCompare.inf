@@ -15,11 +15,16 @@
   Debug.h
   String.c
   String.h
-  main.c
+  HiiVar.c
+  HiiVar.h
+  Main.c
   PciId.c
   PciId.h
   MB.c
   MB.h
+  File.c
+  File.h
+  
 [Packages]
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
@@ -38,6 +43,8 @@
   UefiApplicationEntryPoint
   ShellLib
   DevicePathLib
+  HiiLib
+  UefiHiiServicesLib
   
 [Protocols]
   gEfiShellParametersProtocolGuid
@@ -47,7 +54,7 @@
   gEfiComponentNameProtocolGuid
   gEfiPciIoProtocolGuid
   gEfiDiskInfoProtocolGuid
-  
+  gEfiHiiDatabaseProtocolGuid
 [Guids]
   gEfiDiskInfoIdeInterfaceGuid
   gEfiDiskInfoAhciInterfaceGuid

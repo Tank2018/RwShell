@@ -10,7 +10,7 @@ Lspci_VidDid_Destory (
   )
 {
   if (pVidDid == NULL) { //safety check
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return;
   }	
   if (pVidDid->pVidName != NULL) {
@@ -47,7 +47,7 @@ Lspci_VidDid_New (
   //
   viddid = (PciVidDid *) AllocateZeroPool (sizeof (PciVidDid));
   if (viddid == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return NULL;
   }
   //
@@ -61,9 +61,9 @@ Lspci_VidDid_New (
   	index ++;
   }
   if (mVendorList[index].VendorId == 0xffff) {
-    viddid->pVidName = (CHAR8 *) CloneAsciiString ("Unknown Verndor Id");
+    viddid->pVidName = (CHAR8 *) Clone_Ascii_String_WO_SPACE ("Unknown Verndor Id");
   } else {
-  	viddid->pVidName = (CHAR8 *) CloneAsciiString (mVendorList[index].pVidName);
+  	viddid->pVidName = (CHAR8 *) Clone_Ascii_String_WO_SPACE (mVendorList[index].pVidName);
   }
   //
   // serach the device string
@@ -80,9 +80,9 @@ Lspci_VidDid_New (
   	index ++;
   }
   if (mDeviceList[index].VendorId == 0xffff) {
-    viddid->pDidName = (CHAR8 *) CloneAsciiString ("Unknown Device Id");
+    viddid->pDidName = (CHAR8 *) Clone_Ascii_String_WO_SPACE ("Unknown Device Id");
   } else {
-  	viddid->pDidName = (CHAR8 *) CloneAsciiString (mDeviceList[index].pDidName);
+  	viddid->pDidName = (CHAR8 *) Clone_Ascii_String_WO_SPACE (mDeviceList[index].pDidName);
   } 
 
   return viddid;
@@ -98,7 +98,7 @@ Lspci_PciDevice_Destory (
   )
 {
   if (pD == NULL) { // safety check
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return;
   }
   FreePool (pD);
@@ -130,17 +130,17 @@ Lspci_PciDevice_New (
                   (VOID **)&PciIo
                   );
   if (EFI_ERROR (Status)) {
-  	LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) handle pci io error\n", __FUNCTION__, __LINE__));
+  	LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) handle pci io error\n", __FUNCTION__, __LINE__));
   	return NULL;
   }
   d = (PciDevice *) AllocateZeroPool (sizeof (PciDevice));
   if (d == NULL) { // safety check
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return NULL;
   }
   d->pData = (UINT8 *) AllocateZeroPool (256);
   if (d->pData == NULL) { // safety check
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return NULL;
   }
   Status = PciIo->Pci.Read (
@@ -151,7 +151,7 @@ Lspci_PciDevice_New (
                        d->pData 
                        );
   if (EFI_ERROR (Status)) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) handle pci io error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) handle pci io error\n", __FUNCTION__, __LINE__));
     return NULL;
   }
   //
@@ -172,7 +172,7 @@ Lspci_Add_List (
   )
 {
   if ((pD == NULL) || (pD1 == NULL)) { // safety check
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return;
   }
   //
@@ -190,7 +190,7 @@ Lspci_Add_Cap (
   )
 {
   if ((pD == NULL) || (pCap == NULL)) { // safety check
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return;
   }
   //
@@ -237,19 +237,19 @@ Lspci_Get_DeviceId (
 VOID 
 Lspci_VidDid_Atrribute_New (
   IN PciDevice      *pD,
-  IN XmlElement     *pElement
+  IN XML_ELEMENT     *pElement
   )
 {
-  XmlAttribute     *ret;
+  XML_ATTRIBUTE     *ret;
   PciVidDid        *viddid;
   CHAR8            t[20];
   if ((pD == NULL) || (pElement == NULL)) { //safety check
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return;
   }
   viddid = Lspci_VidDid_New (Lspci_Get_VendorId (pD), Lspci_Get_DeviceId (pD));
   if (viddid == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new VidDid error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new VidDid error\n", __FUNCTION__, __LINE__));
     return;    
   }
   //
@@ -257,9 +257,9 @@ Lspci_VidDid_Atrribute_New (
   //
   ZeroMem (t, 20);
   AsciiSPrint (t, 20, "vendor(%04x)", Lspci_Get_VendorId (pD));
-  ret =  (XmlAttribute *)Xml_Attribute_New (t, viddid->pVidName);
+  ret =  (XML_ATTRIBUTE *)Xml_Attribute_New (t, viddid->pVidName);
   if (ret == NULL) { //safety check
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return;
   }
   Xml_Element_Add_Attribute (pElement, ret); 
@@ -269,9 +269,9 @@ Lspci_VidDid_Atrribute_New (
   //
   ZeroMem (t, 20);
   AsciiSPrint (t, 20, "device(%04x)", Lspci_Get_DeviceId (pD));
-  ret =  (XmlAttribute *)Xml_Attribute_New (t, viddid->pDidName);
+  ret =  (XML_ATTRIBUTE *)Xml_Attribute_New (t, viddid->pDidName);
   if (ret == NULL) { //safety check
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return;
   }
   Xml_Element_Add_Attribute (pElement, ret); 
@@ -279,18 +279,18 @@ Lspci_VidDid_Atrribute_New (
 VOID 
 Lspci_Data_Element_New (
   IN  PciDevice  *pD,
-  IN  XmlElement *pElement
+  IN  XML_ELEMENT *pElement
   )
 {
-  XmlElement      *e;
+  XML_ELEMENT      *e;
   CHAR8           t[50], p[10];
-  XmlAttribute    *a;
+  XML_ATTRIBUTE    *a;
   UINT8           i,j;
 
   for (i = 0; i < 16; i++) {
-    e =  (XmlElement *)Xml_Element_New ("data");
+    e =  (XML_ELEMENT *)Xml_Element_New ("data");
     if (e == NULL) { //safety check
-      LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new element failed\n", __FUNCTION__, __LINE__));
+      LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new element failed\n", __FUNCTION__, __LINE__));
       return ;
     }
     ZeroMem (t, 50);
@@ -302,9 +302,9 @@ Lspci_Data_Element_New (
     }
     ZeroMem (p, 10);
     AsciiSPrint (p, 10, "%02x", i);
-    a = (XmlAttribute *)Xml_Attribute_New (p, t);
+    a = (XML_ATTRIBUTE *)Xml_Attribute_New (p, t);
     if (a == NULL) {
-      LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new attribute failed\n", __FUNCTION__, __LINE__));
+      LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new attribute failed\n", __FUNCTION__, __LINE__));
       return ;      
     }
     Xml_Element_Add_Attribute (e, a);
@@ -331,38 +331,38 @@ Lspci_Get_Sdid (
 VOID
 Lspci_SSID_Element_New (
   IN  PciDevice  *pD,
-  IN  XmlElement *pElement
+  IN  XML_ELEMENT *pElement
   )
 {
-  XmlElement      *e;
-  XmlAttribute    *a;
+  XML_ELEMENT      *e;
+  XML_ATTRIBUTE    *a;
   CHAR8            t[10];
 
   if ((pD == NULL) || (pElement == NULL)) { //safety check
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return ;
   }
-  e =  (XmlElement *)Xml_Element_New ("ssid"); 
+  e =  (XML_ELEMENT *)Xml_Element_New ("ssid"); 
   if (e == NULL) { //safety check
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new element failed\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new element failed\n", __FUNCTION__, __LINE__));
     return ;
   } 
 
 
   ZeroMem (t, 10);
   AsciiSPrint (t, 10, "%04X", Lspci_Get_Svid (pD));
-  a = (XmlAttribute *)Xml_Attribute_New ("svid", t);
+  a = (XML_ATTRIBUTE *)Xml_Attribute_New ("svid", t);
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new svid failed\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new svid failed\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
 
   ZeroMem (t, 10);
   AsciiSPrint (t, 10, "%04X", Lspci_Get_Sdid (pD));
-  a = (XmlAttribute *)Xml_Attribute_New ("sdid", t);
+  a = (XML_ATTRIBUTE *)Xml_Attribute_New ("sdid", t);
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new svid failed\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new svid failed\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);  
@@ -381,37 +381,37 @@ Lspci_Get_Cmd (
 VOID
 Lspci_Control_Element_New (
   IN  PciDevice  *pD,
-  IN  XmlElement *pElement
+  IN  XML_ELEMENT *pElement
   )
 {
-  XmlElement      *e;
-  XmlAttribute    *a;
+  XML_ELEMENT      *e;
+  XML_ATTRIBUTE    *a;
   UINT16           cmd;
   if ((pD == NULL) || (pElement == NULL)) { //safety check
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return ;
   }
-  e =  (XmlElement *)Xml_Element_New ("control"); 
+  e =  (XML_ELEMENT *)Xml_Element_New ("control"); 
   if (e == NULL) { //safety check
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new element failed\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new element failed\n", __FUNCTION__, __LINE__));
     return ;
   } 
   cmd = Lspci_Get_Cmd (pD);
   //
   // io
   //
-  a = (XmlAttribute *)Xml_Attribute_New ("IO", FLAG(cmd, LS_PCI_COMMAND_IO));
+  a = (XML_ATTRIBUTE *)Xml_Attribute_New ("IO", FLAG(cmd, LS_PCI_COMMAND_IO));
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new io failed\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new io failed\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
   //
   // memory
   //
-  a = (XmlAttribute *)Xml_Attribute_New ("Mem", FLAG(cmd, LS_PCI_COMMAND_MEMORY));
+  a = (XML_ATTRIBUTE *)Xml_Attribute_New ("Mem", FLAG(cmd, LS_PCI_COMMAND_MEMORY));
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new Mem failed\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new Mem failed\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -419,9 +419,9 @@ Lspci_Control_Element_New (
   //
   // bus master
   //
-  a = (XmlAttribute *)Xml_Attribute_New ("BusMaster", FLAG(cmd, LS_PCI_COMMAND_MASTER));
+  a = (XML_ATTRIBUTE *)Xml_Attribute_New ("BusMaster", FLAG(cmd, LS_PCI_COMMAND_MASTER));
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new BusMaster failed\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new BusMaster failed\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -429,9 +429,9 @@ Lspci_Control_Element_New (
   //
   // speccycle
   //
-  a = (XmlAttribute *)Xml_Attribute_New ("SpecCycle", FLAG(cmd, LS_PCI_COMMAND_SPECIAL));
+  a = (XML_ATTRIBUTE *)Xml_Attribute_New ("SpecCycle", FLAG(cmd, LS_PCI_COMMAND_SPECIAL));
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new SpecCycle failed\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new SpecCycle failed\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -439,9 +439,9 @@ Lspci_Control_Element_New (
   //
   // meminv
   //
-  a = (XmlAttribute *)Xml_Attribute_New ("MemInv", FLAG(cmd, LS_PCI_COMMAND_INVALIDATE));
+  a = (XML_ATTRIBUTE *)Xml_Attribute_New ("MemInv", FLAG(cmd, LS_PCI_COMMAND_INVALIDATE));
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new meminv failed\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new meminv failed\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -449,9 +449,9 @@ Lspci_Control_Element_New (
   //
   // VGAsnoop
   //
-  a = (XmlAttribute *)Xml_Attribute_New ("VGASnoop", FLAG(cmd, LS_PCI_COMMAND_VGA_PALETTE));
+  a = (XML_ATTRIBUTE *)Xml_Attribute_New ("VGASnoop", FLAG(cmd, LS_PCI_COMMAND_VGA_PALETTE));
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new VGASnoop failed\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new VGASnoop failed\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -459,9 +459,9 @@ Lspci_Control_Element_New (
   //
   // ParErr
   //
-  a = (XmlAttribute *)Xml_Attribute_New ("ParErr", FLAG(cmd, LS_PCI_COMMAND_PARITY));
+  a = (XML_ATTRIBUTE *)Xml_Attribute_New ("ParErr", FLAG(cmd, LS_PCI_COMMAND_PARITY));
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new ParErr failed\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new ParErr failed\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -469,9 +469,9 @@ Lspci_Control_Element_New (
   //
   // Stepping
   //
-  a = (XmlAttribute *)Xml_Attribute_New ("Stepping", FLAG(cmd, LS_PCI_COMMAND_WAIT));
+  a = (XML_ATTRIBUTE *)Xml_Attribute_New ("Stepping", FLAG(cmd, LS_PCI_COMMAND_WAIT));
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new Stepping failed\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new Stepping failed\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -479,9 +479,9 @@ Lspci_Control_Element_New (
   //
   // SERR
   //
-  a = (XmlAttribute *)Xml_Attribute_New ("SERR", FLAG(cmd, LS_PCI_COMMAND_SERR));
+  a = (XML_ATTRIBUTE *)Xml_Attribute_New ("SERR", FLAG(cmd, LS_PCI_COMMAND_SERR));
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new SERR failed\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new SERR failed\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -489,9 +489,9 @@ Lspci_Control_Element_New (
   //
   // FastB2B
   //
-  a = (XmlAttribute *)Xml_Attribute_New ("FastB2B", FLAG(cmd, LS_PCI_COMMAND_FAST_BACK));
+  a = (XML_ATTRIBUTE *)Xml_Attribute_New ("FastB2B", FLAG(cmd, LS_PCI_COMMAND_FAST_BACK));
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new FastB2B failed\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new FastB2B failed\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -499,9 +499,9 @@ Lspci_Control_Element_New (
   //
   // FastB2B
   //
-  a = (XmlAttribute *)Xml_Attribute_New ("DisINTx", FLAG(cmd, LS_PCI_COMMAND_DISABLE_INTx));
+  a = (XML_ATTRIBUTE *)Xml_Attribute_New ("DisINTx", FLAG(cmd, LS_PCI_COMMAND_DISABLE_INTx));
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new DisINTx failed\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new DisINTx failed\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -520,38 +520,38 @@ Lspci_Get_Sts (
 VOID
 Lspci_Status_Element_New (
   IN  PciDevice  *pD,
-  IN  XmlElement *pElement
+  IN  XML_ELEMENT *pElement
   )
 {
-  XmlElement      *e;
-  XmlAttribute    *a;
+  XML_ELEMENT      *e;
+  XML_ATTRIBUTE    *a;
   UINT16           sts;
   CHAR8           *t;
   if ((pD == NULL) || (pElement == NULL)) { //safety check
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return ;
   }
-  e =  (XmlElement *)Xml_Element_New ("status"); 
+  e =  (XML_ELEMENT *)Xml_Element_New ("status"); 
   if (e == NULL) { //safety check
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new element failed\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new element failed\n", __FUNCTION__, __LINE__));
     return ;
   } 
   sts = Lspci_Get_Sts (pD);
   //
   // Cap
   //
-  a = (XmlAttribute *)Xml_Attribute_New ("Cap", FLAG(sts, LS_PCI_STATUS_CAP_LIST));
+  a = (XML_ATTRIBUTE *)Xml_Attribute_New ("Cap", FLAG(sts, LS_PCI_STATUS_CAP_LIST));
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new Cap failed\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new Cap failed\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
   //
   // 66MHz
   //
-  a = (XmlAttribute *)Xml_Attribute_New ("66MHz", FLAG(sts, LS_PCI_STATUS_66MHZ));
+  a = (XML_ATTRIBUTE *)Xml_Attribute_New ("66MHz", FLAG(sts, LS_PCI_STATUS_66MHZ));
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new 66MHz failed\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new 66MHz failed\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -559,9 +559,9 @@ Lspci_Status_Element_New (
   //
   //UDF
   //
-  a = (XmlAttribute *)Xml_Attribute_New ("UDF", FLAG(sts, LS_PCI_STATUS_UDF));
+  a = (XML_ATTRIBUTE *)Xml_Attribute_New ("UDF", FLAG(sts, LS_PCI_STATUS_UDF));
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new UDF failed\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new UDF failed\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -569,9 +569,9 @@ Lspci_Status_Element_New (
   //
   // FastB2B
   //
-  a = (XmlAttribute *)Xml_Attribute_New ("FastB2B", FLAG(sts, LS_PCI_STATUS_FAST_BACK));
+  a = (XML_ATTRIBUTE *)Xml_Attribute_New ("FastB2B", FLAG(sts, LS_PCI_STATUS_FAST_BACK));
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new FastB2B failed\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new FastB2B failed\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -579,9 +579,9 @@ Lspci_Status_Element_New (
   //
   // ParErr
   //
-  a = (XmlAttribute *)Xml_Attribute_New ("ParErr", FLAG(sts, LS_PCI_STATUS_PARITY));
+  a = (XML_ATTRIBUTE *)Xml_Attribute_New ("ParErr", FLAG(sts, LS_PCI_STATUS_PARITY));
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new ParErr failed\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new ParErr failed\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -598,9 +598,9 @@ Lspci_Status_Element_New (
   if ((sts & LS_PCI_STATUS_DEVSEL_MASK) == LS_PCI_STATUS_DEVSEL_SLOW) {
     t = "slow";
   }
-  a = (XmlAttribute *)Xml_Attribute_New ("DEVSEL", t);
+  a = (XML_ATTRIBUTE *)Xml_Attribute_New ("DEVSEL", t);
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new DEVSEL failed\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new DEVSEL failed\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -608,9 +608,9 @@ Lspci_Status_Element_New (
   //
   // STAbort
   //
-  a = (XmlAttribute *)Xml_Attribute_New ("STAbort", FLAG(sts, LS_PCI_STATUS_SIG_TARGET_ABORT));
+  a = (XML_ATTRIBUTE *)Xml_Attribute_New ("STAbort", FLAG(sts, LS_PCI_STATUS_SIG_TARGET_ABORT));
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new STAbort failed\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new STAbort failed\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -618,9 +618,9 @@ Lspci_Status_Element_New (
   //
   // RTAbort
   //
-  a = (XmlAttribute *)Xml_Attribute_New ("RTAbort", FLAG(sts, LS_PCI_STATUS_REC_TARGET_ABORT));
+  a = (XML_ATTRIBUTE *)Xml_Attribute_New ("RTAbort", FLAG(sts, LS_PCI_STATUS_REC_TARGET_ABORT));
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new RTAbort failed\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new RTAbort failed\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -628,9 +628,9 @@ Lspci_Status_Element_New (
   //
   // RMAbort
   //
-  a = (XmlAttribute *)Xml_Attribute_New ("RMAbort", FLAG(sts, LS_PCI_STATUS_REC_MASTER_ABORT));
+  a = (XML_ATTRIBUTE *)Xml_Attribute_New ("RMAbort", FLAG(sts, LS_PCI_STATUS_REC_MASTER_ABORT));
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new RMAbort failed\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new RMAbort failed\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -638,9 +638,9 @@ Lspci_Status_Element_New (
   //
   // SERR
   //
-  a = (XmlAttribute *)Xml_Attribute_New ("SERR", FLAG(sts, LS_PCI_STATUS_SIG_SYSTEM_ERROR));
+  a = (XML_ATTRIBUTE *)Xml_Attribute_New ("SERR", FLAG(sts, LS_PCI_STATUS_SIG_SYSTEM_ERROR));
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new SERR failed\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new SERR failed\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -648,9 +648,9 @@ Lspci_Status_Element_New (
   //
   // PERR
   //
-  a = (XmlAttribute *)Xml_Attribute_New ("PERR", FLAG(sts, LS_PCI_STATUS_DETECTED_PARITY));
+  a = (XML_ATTRIBUTE *)Xml_Attribute_New ("PERR", FLAG(sts, LS_PCI_STATUS_DETECTED_PARITY));
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new PERR failed\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new PERR failed\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -658,9 +658,9 @@ Lspci_Status_Element_New (
   //
   // INTx
   //
-  a = (XmlAttribute *)Xml_Attribute_New ("INTx", FLAG(sts, LS_PCI_STATUS_INTx));
+  a = (XML_ATTRIBUTE *)Xml_Attribute_New ("INTx", FLAG(sts, LS_PCI_STATUS_INTx));
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new INTx failed\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new INTx failed\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -686,38 +686,38 @@ Lspci_Get_IntIRQ (
 VOID
 Lspci_Int_Element_New (
   IN  PciDevice  *pD,
-  IN  XmlElement *pElement
+  IN  XML_ELEMENT *pElement
   )
 {
-  XmlElement      *e;
-  XmlAttribute    *a;
+  XML_ELEMENT      *e;
+  XML_ATTRIBUTE    *a;
   CHAR8            t[10];
 
   if ((pD == NULL) || (pElement == NULL)) { //safety check
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return ;
   }
-  e =  (XmlElement *)Xml_Element_New ("interrupt"); 
+  e =  (XML_ELEMENT *)Xml_Element_New ("interrupt"); 
   if (e == NULL) { //safety check
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new element failed\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new element failed\n", __FUNCTION__, __LINE__));
     return ;
   } 
 
 
   ZeroMem (t, 10);
   AsciiSPrint (t, 10, "%d", Lspci_Get_IntLine (pD));
-  a = (XmlAttribute *)Xml_Attribute_New ("IntLine", t);
+  a = (XML_ATTRIBUTE *)Xml_Attribute_New ("IntLine", t);
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new svid failed\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new svid failed\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
 
   ZeroMem (t, 10);
   AsciiSPrint (t, 10, "%d", Lspci_Get_IntIRQ (pD));
-  a = (XmlAttribute *)Xml_Attribute_New ("IntIRQ", t);
+  a = (XML_ATTRIBUTE *)Xml_Attribute_New ("IntIRQ", t);
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new svid failed\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new svid failed\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);  
@@ -737,18 +737,18 @@ Lspci_Get_Bar (
 VOID
 Lspci_Region_Element_New (
   IN  PciDevice  *pD,
-  IN  XmlElement *pElement
+  IN  XML_ELEMENT *pElement
   )
 {
-  XmlElement      *e = NULL;
-  XmlAttribute    *a;
+  XML_ELEMENT      *e = NULL;
+  XML_ATTRIBUTE    *a;
   CHAR8            t[10];
   CHAR8           *t1;
   UINT8           is = 2;
   UINTN           i;
   UINT32          Temp;
   if ((pD == NULL) || (pElement == NULL)) { //safety check
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return ;
   }
 
@@ -769,16 +769,16 @@ Lspci_Region_Element_New (
 
       ZeroMem (t, 10);
       AsciiSPrint (t, 10, "Region %d", i);
-      e =  (XmlElement *)Xml_Element_New (t); 
+      e =  (XML_ELEMENT *)Xml_Element_New (t); 
       if (e == NULL) { //safety check
-        LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new Region failed\n", __FUNCTION__, __LINE__));
+        LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new Region failed\n", __FUNCTION__, __LINE__));
         continue ;
       } 
       ZeroMem (t, 10);
       AsciiSPrint (t, 10, "%x", Temp & (~0x3));
       a = Xml_Attribute_New ("IO Addr", t);
       if (a == NULL) {
-        LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new IO port failed\n", __FUNCTION__, __LINE__));
+        LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new IO port failed\n", __FUNCTION__, __LINE__));
         continue ;
       }
       Xml_Element_Add_Attribute (e, a);  
@@ -791,16 +791,16 @@ Lspci_Region_Element_New (
 
     ZeroMem (t, 10);
     AsciiSPrint (t, 10, "Region %d", i);
-    e =  (XmlElement *)Xml_Element_New (t); 
+    e =  (XML_ELEMENT *)Xml_Element_New (t); 
     if (e == NULL) { //safety check
-      LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new Region failed\n", __FUNCTION__, __LINE__));
+      LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new Region failed\n", __FUNCTION__, __LINE__));
       continue ;
     } 
     ZeroMem (t, 10);
     AsciiSPrint (t, 10, "%x", Temp & (~0xf));
     a = Xml_Attribute_New ("Memory Addr", t);
     if (a == NULL) {
-      LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new Memory Addr failed\n", __FUNCTION__, __LINE__));
+      LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new Memory Addr failed\n", __FUNCTION__, __LINE__));
       continue ;
     }  
     Xml_Element_Add_Attribute (e, a);
@@ -813,7 +813,7 @@ Lspci_Region_Element_New (
     }
     a = Xml_Attribute_New ("Bits", t1);
     if (a == NULL) {
-      LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new Memory Addr failed\n", __FUNCTION__, __LINE__));
+      LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new Memory Addr failed\n", __FUNCTION__, __LINE__));
       continue ;
     }  
     Xml_Element_Add_Attribute (e, a);  
@@ -825,7 +825,7 @@ Lspci_Region_Element_New (
     }
     a = Xml_Attribute_New ("Perfetch", t1);
     if (a == NULL) {
-      LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new Perfetch failed\n", __FUNCTION__, __LINE__));
+      LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new Perfetch failed\n", __FUNCTION__, __LINE__));
       continue ;
     }  
 
@@ -879,18 +879,18 @@ Lspci_Get_Cap (
 VOID
 Lspci_Capbility_PM_Element_New (
   IN  PciDevice  *pD,
-  IN  XmlElement *pElement
+  IN  XML_ELEMENT *pElement
   )
 {
   UINT16                  offset;
   EFI_STATUS              Status;
   EFI_PCI_CAPABILITY_PMI  pmCap; 
   CHAR8                   t[20]; 
-  XmlElement              *eE = NULL;      
-  XmlElement              *e = NULL;
-  XmlAttribute            *a = NULL;
+  XML_ELEMENT              *eE = NULL;      
+  XML_ELEMENT              *e = NULL;
+  XML_ATTRIBUTE            *a = NULL;
   if ((pD == NULL) || (pElement == NULL)) { //safety check
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return ;
   }
   offset = Lspci_Get_Cap (pD, LS_PCI_CAP_ID_PM);
@@ -912,7 +912,7 @@ Lspci_Capbility_PM_Element_New (
   //
   eE = Xml_Element_New ("Capabilities");
   if (eE == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new Capabilities error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new Capabilities error\n", __FUNCTION__, __LINE__));
     return ; 
   }
   //
@@ -920,7 +920,7 @@ Lspci_Capbility_PM_Element_New (
   //
   a = Xml_Attribute_New ("Cap", "Power Management");
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new PMEClk error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new PMEClk error\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (eE, a);
@@ -931,7 +931,7 @@ Lspci_Capbility_PM_Element_New (
   AsciiSPrint (t, 20, "%x", pmCap.Hdr.CapabilityID);
   a = Xml_Attribute_New ("CapId", t);
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new PMEClk error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new PMEClk error\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (eE, a);
@@ -942,7 +942,7 @@ Lspci_Capbility_PM_Element_New (
   AsciiSPrint (t, 20, "%x", offset);
   a = Xml_Attribute_New ("Offset", t);
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new PMEClk error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new PMEClk error\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (eE, a);
@@ -953,7 +953,7 @@ Lspci_Capbility_PM_Element_New (
   //
   e = Xml_Element_New ("Flags");
   if (e == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new power management error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new power management error\n", __FUNCTION__, __LINE__));
     return ;    
   }
 
@@ -964,7 +964,7 @@ Lspci_Capbility_PM_Element_New (
   AsciiSPrint (t, 20, "%x", pmCap.PMC.Bits.Version);
   a = Xml_Attribute_New ("Version", t);
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new Version error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new Version error\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -974,7 +974,7 @@ Lspci_Capbility_PM_Element_New (
   //
   a = Xml_Attribute_New ("PMEClk", FLAG(pmCap.PMC.Data, LS_PCI_PM_CAP_PME_CLOCK));
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new PMEClk error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new PMEClk error\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -984,7 +984,7 @@ Lspci_Capbility_PM_Element_New (
   //
   a = Xml_Attribute_New ("D1", FLAG(pmCap.PMC.Data, LS_PCI_PM_CAP_D1));
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new D1 error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new D1 error\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -994,7 +994,7 @@ Lspci_Capbility_PM_Element_New (
   //
   a = Xml_Attribute_New ("D2", FLAG(pmCap.PMC.Data, LS_PCI_PM_CAP_D2));
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new D1 error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new D1 error\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -1020,7 +1020,7 @@ Lspci_Capbility_PM_Element_New (
   }
   a = Xml_Attribute_New ("PMESupport", t);
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new PMESupport error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new PMESupport error\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -1031,7 +1031,7 @@ Lspci_Capbility_PM_Element_New (
   Xml_Element_Add_Child (eE, e);
   e = Xml_Element_New ("Status");
   if (e == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new power management error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new power management error\n", __FUNCTION__, __LINE__));
     return ;    
   }
   //
@@ -1039,7 +1039,7 @@ Lspci_Capbility_PM_Element_New (
   //
   a = Xml_Attribute_New ("PMEStatus", FLAG(pmCap.PMCSR.Data, LS_PCI_PM_CTRL_PME_STATUS));
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new PMEStatus error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new PMEStatus error\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -1049,7 +1049,7 @@ Lspci_Capbility_PM_Element_New (
   //
   a = Xml_Attribute_New ("PMEEnable", FLAG(pmCap.PMCSR.Data, LS_PCI_PM_CTRL_PME_ENABLE));
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new PMEEnable error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new PMEEnable error\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -1061,7 +1061,7 @@ Lspci_Capbility_PM_Element_New (
   AsciiSPrint (t, 20, "D%X", pmCap.PMCSR.Data&LS_PCI_PM_CTRL_STATE_MASK);
   a = Xml_Attribute_New ("State", t);
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) State error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) State error\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -1069,7 +1069,7 @@ Lspci_Capbility_PM_Element_New (
   if (Lspci_Is_Bridge (pD)) {
     a = Xml_Attribute_New ("PPB", FLAG(pmCap.PMCSR.Data, LS_PCI_PM_BPCC_ENABLE));
     if (a == NULL) {
-      LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new PPB error\n", __FUNCTION__, __LINE__));
+      LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new PPB error\n", __FUNCTION__, __LINE__));
       return ;    
     }
     Xml_Element_Add_Attribute (e, a);
@@ -1086,22 +1086,22 @@ Lspci_Capbility_PM_Element_New (
 VOID
 Lspci_Capbility_PCIE_Element_New (
   IN  PciDevice  *pD,
-  IN  XmlElement *pElement
+  IN  XML_ELEMENT *pElement
   )
 {
   UINT16                  offset;
   EFI_STATUS              Status;
   PCI_CAPABILITY_PCIEXP   pcieCap; 
   CHAR8                   t[40]; 
-  XmlElement              *eE = NULL;      
-  XmlElement              *e = NULL;
-  XmlAttribute            *a = NULL;
+  XML_ELEMENT              *eE = NULL;      
+  XML_ELEMENT              *e = NULL;
+  XML_ATTRIBUTE            *a = NULL;
   BOOLEAN                 needSoltImplement = FALSE;
   CHAR8                   *l0sltan[] = { "64ns", "128ns", "256ns", "512ns", "1us", "2us", "4us", "unlimited" };
   CHAR8                   *l1ltan[] = { "1us", "2us", "4us", "8us", "16us", "32us", "64us", "unlimited" };
   //CHAR8                   *lnkSpeed[] = {"2.5GT/s", "5GT/s", "8GT/s"};
   if ((pD == NULL) || (pElement == NULL)) { //safety check
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return ;
   }
   offset = Lspci_Get_Cap (pD, LS_PCI_CAP_ID_EXP);
@@ -1121,13 +1121,13 @@ Lspci_Capbility_PCIE_Element_New (
 
   eE = Xml_Element_New ("Capabilities");
   if (eE == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new Capabilities error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new Capabilities error\n", __FUNCTION__, __LINE__));
     return ; 
   }
 
   a = Xml_Attribute_New ("Cap", "PCIE Express");
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new Caperror\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new Caperror\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (eE, a);
@@ -1136,7 +1136,7 @@ Lspci_Capbility_PCIE_Element_New (
   AsciiSPrint (t, 20, "%x", pcieCap.Hdr.CapabilityID);
   a = Xml_Attribute_New ("CapId", t);
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new CapId error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new CapId error\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (eE, a);
@@ -1145,7 +1145,7 @@ Lspci_Capbility_PCIE_Element_New (
   AsciiSPrint (t, 20, "%x", offset);
   a = Xml_Attribute_New ("Offset", t);
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new Offset error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new Offset error\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (eE, a);
@@ -1156,7 +1156,7 @@ Lspci_Capbility_PCIE_Element_New (
   //
   e = Xml_Element_New ("Flags");
   if (e == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new flags error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new flags error\n", __FUNCTION__, __LINE__));
     return ;    
   }
 
@@ -1167,7 +1167,7 @@ Lspci_Capbility_PCIE_Element_New (
   AsciiSPrint (t, 20, "%x", pcieCap.Capability.Bits.Version);
   a = Xml_Attribute_New ("Version", t);
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new version error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new version error\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -1214,7 +1214,7 @@ Lspci_Capbility_PCIE_Element_New (
   }
   a = Xml_Attribute_New ("Type", t);
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new Type error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new Type error\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -1225,7 +1225,7 @@ Lspci_Capbility_PCIE_Element_New (
   if (needSoltImplement) {
     a = Xml_Attribute_New ("SoltImplement", FLAG (pcieCap.Capability.Uint16, LS_PCI_EXP_FLAGS_SLOT));
     if (a == NULL) {
-      LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new SoltImplement error\n", __FUNCTION__, __LINE__));
+      LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new SoltImplement error\n", __FUNCTION__, __LINE__));
       return ;    
     }
     Xml_Element_Add_Attribute (e, a);
@@ -1238,7 +1238,7 @@ Lspci_Capbility_PCIE_Element_New (
   AsciiSPrint (t, 20, "%x", pcieCap.Capability.Bits.InterruptMessageNumber);
   a = Xml_Attribute_New ("IntMsgNum", t);
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new IntMsgNum error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new IntMsgNum error\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -1249,14 +1249,14 @@ Lspci_Capbility_PCIE_Element_New (
   //
   e = Xml_Element_New ("DevCap");
   if (e == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new DevCap error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new DevCap error\n", __FUNCTION__, __LINE__));
     return ;    
   }
   ZeroMem (t, 20);
   AsciiSPrint (t, 20, "%d Byte", (pcieCap.DeviceCapability.Bits.MaxPayloadSize+1) * 128);
   a = Xml_Attribute_New ("MaxPayload", t);
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new MaxPayload error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new MaxPayload error\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -1265,7 +1265,7 @@ Lspci_Capbility_PCIE_Element_New (
   AsciiSPrint (t, 20, "%d", pcieCap.DeviceCapability.Bits.PhantomFunctions);
   a = Xml_Attribute_New ("PhantFunc", t);
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new PhantFunc error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new PhantFunc error\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -1275,21 +1275,21 @@ Lspci_Capbility_PCIE_Element_New (
 
     a = Xml_Attribute_New ("L0s Latency", l0sltan[pcieCap.DeviceCapability.Bits.EndpointL0sAcceptableLatency]);
     if (a == NULL) {
-      LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new L0s Latency error\n", __FUNCTION__, __LINE__));
+      LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new L0s Latency error\n", __FUNCTION__, __LINE__));
       return ;    
     }
     Xml_Element_Add_Attribute (e, a);
 
     a = Xml_Attribute_New ("L1 Latency", l1ltan[pcieCap.DeviceCapability.Bits.EndpointL1AcceptableLatency]);
     if (a == NULL) {
-      LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new L1 Latency error\n", __FUNCTION__, __LINE__));
+      LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new L1 Latency error\n", __FUNCTION__, __LINE__));
       return ;    
     }
     Xml_Element_Add_Attribute (e, a);
     
     a = Xml_Attribute_New ("FRst", FLAG(pcieCap.DeviceCapability.Bits.EndpointL1AcceptableLatency, LS_PCI_EXP_DEVCAP_FLRESET));
     if (a == NULL) {
-      LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new FRst error\n", __FUNCTION__, __LINE__));
+      LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new FRst error\n", __FUNCTION__, __LINE__));
       return ;    
     }
     Xml_Element_Add_Attribute (e, a);
@@ -1300,7 +1300,7 @@ Lspci_Capbility_PCIE_Element_New (
   //
   e = Xml_Element_New ("DevCtl");
   if (e == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new DevCtl error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new DevCtl error\n", __FUNCTION__, __LINE__));
     return ;    
   }
   //  Error  Report
@@ -1320,14 +1320,14 @@ Lspci_Capbility_PCIE_Element_New (
 
   a = Xml_Attribute_New ("ERRSupport", t);
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new ERRSupport error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new ERRSupport error\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
   //Releax ordering
   a = Xml_Attribute_New ("RlxdOrd", FLAG (pcieCap.DeviceControl.Uint16, LS_PCI_EXP_DEVCTL_RELAXED));
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new RlxdOrd error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new RlxdOrd error\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -1336,7 +1336,7 @@ Lspci_Capbility_PCIE_Element_New (
   AsciiSPrint (t, 20, "%d Byte", (pcieCap.DeviceControl.Bits.MaxPayloadSize+1) * 128);
   a = Xml_Attribute_New ("MaxPayload", t);
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new MaxPayload error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new MaxPayload error\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -1345,7 +1345,7 @@ Lspci_Capbility_PCIE_Element_New (
   AsciiSPrint (t, 20, "%d Byte", (pcieCap.DeviceControl.Bits.MaxReadRequestSize+1) * 128);
   a = Xml_Attribute_New ("MaxReadReq", t);
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new MaxReadReq error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new MaxReadReq error\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -1356,7 +1356,7 @@ Lspci_Capbility_PCIE_Element_New (
   //
   e = Xml_Element_New ("DevSts");
   if (e == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new DevSts error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new DevSts error\n", __FUNCTION__, __LINE__));
     return ;    
   }
   //  Error  Report
@@ -1376,7 +1376,7 @@ Lspci_Capbility_PCIE_Element_New (
 
   a = Xml_Attribute_New ("ERRStatus", t);
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new ERRStatus error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new ERRStatus error\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -1386,7 +1386,7 @@ Lspci_Capbility_PCIE_Element_New (
   //
   e = Xml_Element_New ("LnkCap");
   if (e == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new LnkCap error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new LnkCap error\n", __FUNCTION__, __LINE__));
     return ;    
   }
   //Port Number
@@ -1394,7 +1394,7 @@ Lspci_Capbility_PCIE_Element_New (
   AsciiSPrint (t, 20, "%d", pcieCap.LinkCapability.Bits.PortNumber);
   a = Xml_Attribute_New ("Port", t);
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new Surprise error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new Surprise error\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);  
@@ -1419,7 +1419,7 @@ Lspci_Capbility_PCIE_Element_New (
   }
   a = Xml_Attribute_New ("MaxLnkSpeed", t);
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new MaxLnkSpeed error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new MaxLnkSpeed error\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -1428,7 +1428,7 @@ Lspci_Capbility_PCIE_Element_New (
   AsciiSPrint (t, 20, "x%d", pcieCap.LinkCapability.Bits.MaxLinkWidth);
   a = Xml_Attribute_New ("MaxLnkWidth", t);
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new MaxLnkWidth error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new MaxLnkWidth error\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -1453,21 +1453,21 @@ Lspci_Capbility_PCIE_Element_New (
   }
   a = Xml_Attribute_New ("ASPMSupp", t);
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new ASPMSupp error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new ASPMSupp error\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
   if (pcieCap.LinkCapability.Bits.Aspm) {
     a = Xml_Attribute_New ("L0sLatencyExt", l0sltan[pcieCap.LinkCapability.Bits.L0sExitLatency]);
     if (a == NULL) {
-      LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new L0sLatencyExterror\n", __FUNCTION__, __LINE__));
+      LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new L0sLatencyExterror\n", __FUNCTION__, __LINE__));
       return ;    
     }
     Xml_Element_Add_Attribute (e, a);
 
     a = Xml_Attribute_New ("L1LatencyExt", l1ltan[pcieCap.LinkCapability.Bits.L1ExitLatency]);
     if (a == NULL) {
-      LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new L1LatencyExterror\n", __FUNCTION__, __LINE__));
+      LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new L1LatencyExterror\n", __FUNCTION__, __LINE__));
       return ;    
     }
     Xml_Element_Add_Attribute (e, a);
@@ -1476,7 +1476,7 @@ Lspci_Capbility_PCIE_Element_New (
   // clock power manager
   a = Xml_Attribute_New ("ClockPM", FLAG(pcieCap.LinkCapability.Uint32, LS_PCI_EXP_LNKCAP_CLOCKPM));
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new tClockPM error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new tClockPM error\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);  
@@ -1486,7 +1486,7 @@ Lspci_Capbility_PCIE_Element_New (
   //
   e = Xml_Element_New ("LnkCtl");
   if (e == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new LnkCtl error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new LnkCtl error\n", __FUNCTION__, __LINE__));
     return ;    
   }
   //ASPM enable
@@ -1510,21 +1510,21 @@ Lspci_Capbility_PCIE_Element_New (
   }
   a = Xml_Attribute_New ("ASPM", t);
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new ASPM error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new ASPM error\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a); 
   // link disable
   a = Xml_Attribute_New ("LnkDis", FLAG(pcieCap.LinkControl.Uint16, LS_PCI_EXP_LNKCTL_DISABLE));
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new ASPM error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new ASPM error\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a); 
   // Retry Link disable
   a = Xml_Attribute_New ("RtyLnk", FLAG(pcieCap.LinkControl.Uint16, LS_PCI_EXP_LNKCTL_RETRAIN));
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new ASPM error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new ASPM error\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a); 
@@ -1534,7 +1534,7 @@ Lspci_Capbility_PCIE_Element_New (
   //
   e = Xml_Element_New ("LnkSts");
   if (e == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new LnkCtl error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new LnkCtl error\n", __FUNCTION__, __LINE__));
     return ;    
   }  
   // current link speed
@@ -1558,7 +1558,7 @@ Lspci_Capbility_PCIE_Element_New (
   }
   a = Xml_Attribute_New ("CurLnkSpeed", t);
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new CurLnkSpeed error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new CurLnkSpeed error\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -1568,7 +1568,7 @@ Lspci_Capbility_PCIE_Element_New (
   AsciiSPrint (t, 20, "x%d", pcieCap.LinkStatus.Bits.NegotiatedLinkWidth);
   a = Xml_Attribute_New ("CurLnkWidth", t);
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new MaxLnkWidth error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new MaxLnkWidth error\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -1576,7 +1576,7 @@ Lspci_Capbility_PCIE_Element_New (
   // Link training
   a = Xml_Attribute_New ("LnkTrain", FLAG(pcieCap.LinkStatus.Uint16,LS_PCI_EXP_LNKSTA_TRAIN));
   if (a == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) new MaxLnkWidth error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new MaxLnkWidth error\n", __FUNCTION__, __LINE__));
     return ;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -1591,12 +1591,12 @@ Lspci_PciDevice_Element_New (
   IN  PciDevice  *pD
   )
 {
-  XmlElement      *ret;
+  XML_ELEMENT      *ret;
 
   CHAR8           t[20];
   UINT32          bdf;
   if (pD == NULL) { //safety check
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return NULL;
   }
   //
@@ -1611,7 +1611,7 @@ Lspci_PciDevice_Element_New (
   }
   ret = Xml_Element_New (t); 
   if (ret == NULL) { //safety check
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return NULL;
   }
   //
@@ -1624,7 +1624,7 @@ Lspci_PciDevice_Element_New (
   //
   Lspci_Data_Element_New (pD, ret);
   if (ret == NULL) {
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
   }
   //
   // add the ssid information
@@ -1694,18 +1694,18 @@ Lspci_PciDevice_Build (
 
 VOID
 Lspci_Xml_Write (
-  IN XmlElement *pElement
+  IN XML_ELEMENT *pElement
   )
 {
-  XmlElement                            *eE;
-  XmlElement                            *e;
-  XmlAttribute                          *a;
+  XML_ELEMENT                            *eE;
+  XML_ELEMENT                            *e;
+  XML_ATTRIBUTE                          *a;
   LIST_ENTRY                            *Link;
   PciDevice                             *d = NULL;
   PciDevice                             *dD = NULL;
 
   if (pElement == NULL) { //safety check
-    LSPCI_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    LSPCI_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return;
   }
 

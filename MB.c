@@ -136,7 +136,7 @@ MB_Get_Bios_Date (
              &Count
              );
   if (EFI_ERROR (Status)) {
-    MB_DEBUG ((EFI_D_ERROR, "%a(%d) load smbios type 0 failed\n", __FUNCTION__, __LINE__));
+    MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) load smbios type 0 failed\n", __FUNCTION__, __LINE__));
     return NULL;    
   }
 
@@ -146,7 +146,7 @@ MB_Get_Bios_Date (
   Type0 = (SMBIOS_TABLE_TYPE0 *)(UINTN) Addr[0];
   t = MB_Get_String_By_Num ((VOID *)Type0, Type0->BiosReleaseDate); 
   if (t == NULL) {
-    MB_DEBUG ((EFI_D_ERROR, "%a(%d): Can't found bios version string\n", __FUNCTION__, __LINE__));
+    MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d): Can't found bios version string\n", __FUNCTION__, __LINE__));
     return NULL;
   }
   return t;
@@ -173,7 +173,7 @@ MB_Get_Bios_Version (
              &Count
              );
   if (EFI_ERROR (Status)) {
-    MB_DEBUG ((EFI_D_ERROR, "%a(%d) load smbios type 0 failed\n", __FUNCTION__, __LINE__));
+    MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) load smbios type 0 failed\n", __FUNCTION__, __LINE__));
     return NULL;    
   }
 
@@ -183,7 +183,7 @@ MB_Get_Bios_Version (
   Type0 = (SMBIOS_TABLE_TYPE0 *)(UINTN) Addr[0];
   t = MB_Get_String_By_Num ((VOID *)Type0, Type0->BiosVersion); 
   if (t == NULL) {
-    MB_DEBUG ((EFI_D_ERROR, "%a(%d): Can't found bios version string\n", __FUNCTION__, __LINE__));
+    MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d): Can't found bios version string\n", __FUNCTION__, __LINE__));
     return NULL;
   }
   if (Addr != NULL) {
@@ -196,20 +196,20 @@ MB_Get_Bios_Version (
 VOID
 MB_FW_BIOS_Element_New (
   IN EFI_SMBIOS_PROTOCOL                   *This,
-  IN XmlElement                            *pE
+  IN XML_ELEMENT                            *pE
   )
 {
-  XmlElement                            *e;
-  XmlAttribute                          *a;
+  XML_ELEMENT                            *e;
+  XML_ATTRIBUTE                          *a;
   
   CHAR8                                 *t;
   if ((pE == NULL) || (This == NULL)) { //safety check
-    MB_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return;
   }
   e = Xml_Element_New ("BIOS");
   if (e == NULL) {
-    MB_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return;    
   }
 
@@ -218,13 +218,13 @@ MB_FW_BIOS_Element_New (
   //
   t = MB_Get_Bios_Version (This);
   if (t == NULL) {
-    MB_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return;        
   }
  
   a = Xml_Attribute_New ("Version", t);
   if (a == NULL) {
-    MB_DEBUG ((EFI_D_ERROR, "%a(%d) new version error\n", __FUNCTION__, __LINE__));
+    MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new version error\n", __FUNCTION__, __LINE__));
     return;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -235,12 +235,12 @@ MB_FW_BIOS_Element_New (
   //
   t = MB_Get_Bios_Date (This);
   if (t == NULL) {
-    MB_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return;        
   }
   a = Xml_Attribute_New ("date", t);
   if (a == NULL) {
-    MB_DEBUG ((EFI_D_ERROR, "%a(%d) new date error\n", __FUNCTION__, __LINE__));
+    MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new date error\n", __FUNCTION__, __LINE__));
     return;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -253,23 +253,23 @@ MB_FW_BIOS_Element_New (
 VOID
 MB_FW_EC_Element_New (
   IN EFI_SMBIOS_PROTOCOL                   *This,
-  IN XmlElement                            *pE
+  IN XML_ELEMENT                            *pE
   )
 {
-  XmlElement                            *e;
-  XmlAttribute                          *a;
+  XML_ELEMENT                            *e;
+  XML_ATTRIBUTE                          *a;
   EFI_STATUS                            Status;
   UINTN                                 *Addr;
   UINTN                                 Count;
   CHAR8                                 t[20];
   SMBIOS_TABLE_TYPE0                    *Type0;  
   if ((pE == NULL) || (This == NULL)) { //safety check
-    MB_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return;
   }
   e = Xml_Element_New ("EC");
   if (e == NULL) {
-    MB_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return;    
   }
 
@@ -283,7 +283,7 @@ MB_FW_EC_Element_New (
              &Count
              );
   if (EFI_ERROR (Status)) {
-    MB_DEBUG ((EFI_D_ERROR, "%a(%d) load smbios type 0 failed\n", __FUNCTION__, __LINE__));
+    MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) load smbios type 0 failed\n", __FUNCTION__, __LINE__));
     return;    
   }
   Type0 = (SMBIOS_TABLE_TYPE0 *)(UINTN) Addr[0];
@@ -291,7 +291,7 @@ MB_FW_EC_Element_New (
   AsciiSPrint (t, 20, "%02x.%02x", Type0->EmbeddedControllerFirmwareMajorRelease, Type0->EmbeddedControllerFirmwareMinorRelease);
   a = Xml_Attribute_New ("Version", t);
   if (a == NULL) {
-    MB_DEBUG ((EFI_D_ERROR, "%a(%d) new version error\n", __FUNCTION__, __LINE__));
+    MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new version error\n", __FUNCTION__, __LINE__));
     return;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -301,11 +301,11 @@ MB_FW_EC_Element_New (
 VOID
 MB_CPU_Element_New (
   IN EFI_SMBIOS_PROTOCOL                   *This,
-  IN XmlElement                            *pE
+  IN XML_ELEMENT                            *pE
   )
 {
-  XmlElement                            *e;
-  XmlAttribute                          *a;
+  XML_ELEMENT                            *e;
+  XML_ATTRIBUTE                          *a;
   EFI_STATUS                            Status;
   UINTN                                 *Addr;
   UINTN                                 Count;
@@ -321,12 +321,12 @@ MB_CPU_Element_New (
              &Count
              );
   if (EFI_ERROR (Status)) {
-    MB_DEBUG ((EFI_D_ERROR,  "%a(%d): Can't load TYPE4\n", __FUNCTION__, __LINE__));
+    MB_DEBUG ((DEBUG_LEVEL_ERROR,  "%a(%d): Can't load TYPE4\n", __FUNCTION__, __LINE__));
     return;
   }
   e = Xml_Element_New ("CPU");
   if (e == NULL) {
-    MB_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return;    
   }
   //
@@ -335,13 +335,13 @@ MB_CPU_Element_New (
   Type4 = (SMBIOS_TABLE_TYPE4 *)(UINTN) Addr[0];
   t = MB_Get_String_By_Num ((VOID *)Type4, Type4->ProcessorVersion); 
   if (t == NULL) {
-    MB_DEBUG ((EFI_D_ERROR, "%a(%d): Can't found Processor Version\n", __FUNCTION__, __LINE__));
+    MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d): Can't found Processor Version\n", __FUNCTION__, __LINE__));
     return;
   }  
 
   a = Xml_Attribute_New ("name", t);
   if (a == NULL) {
-    MB_DEBUG ((EFI_D_ERROR, "%a(%d) new version error\n", __FUNCTION__, __LINE__));
+    MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new version error\n", __FUNCTION__, __LINE__));
     return;    
   }
   Xml_Element_Add_Attribute (e, a);
@@ -352,12 +352,12 @@ MB_CPU_Element_New (
 VOID
 MB_MEM_Element_New (
   IN EFI_SMBIOS_PROTOCOL                   *This,
-  IN XmlElement                            *pE
+  IN XML_ELEMENT                            *pE
   )
 {
-  XmlElement                            *e;
-  XmlElement                            *eE;
-  XmlAttribute                          *a;
+  XML_ELEMENT                            *e;
+  XML_ELEMENT                            *eE;
+  XML_ATTRIBUTE                          *a;
   EFI_STATUS                            Status;
   UINTN                                 *Addr;
   UINTN                                 Count;
@@ -375,20 +375,20 @@ MB_MEM_Element_New (
              &Count
              );
   if (EFI_ERROR (Status)) {
-    MB_DEBUG ((EFI_D_ERROR, "%a(%d): Can't load TYPE4\n", __FUNCTION__, __LINE__));
+    MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d): Can't load TYPE4\n", __FUNCTION__, __LINE__));
     return;
   }
   eE = Xml_Element_New ("Memory");
   if (eE == NULL) {
-    MB_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return;    
   }
-  //MB_DEBUG ((EFI_D_ERROR, "%x", Count));
+  //MB_DEBUG ((DEBUG_LEVEL_ERROR, "%x", Count));
   for (Index = 0; Index < Count; Index ++) {
     e = NULL;
     e = Xml_Element_New ("Mem");
     if (e == NULL) {
-      MB_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+      MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
       return;    
     }
     Type17 = (SMBIOS_TABLE_TYPE17 *)(UINTN) Addr[Index];
@@ -397,13 +397,13 @@ MB_MEM_Element_New (
     //
     t = MB_Get_String_By_Num ((VOID *)Type17, Type17->BankLocator); 
     if (t == NULL) {
-      MB_DEBUG ((EFI_D_ERROR, "%a(%d): Can't found Processor Version\n", __FUNCTION__, __LINE__));
+      MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d): Can't found Processor Version\n", __FUNCTION__, __LINE__));
       return;
     }  
     a = NULL;
     a = Xml_Attribute_New ("BankLocator", t);
     if (a == NULL) {
-      MB_DEBUG ((EFI_D_ERROR, "%a(%d) new BankLocator error\n", __FUNCTION__, __LINE__));
+      MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new BankLocator error\n", __FUNCTION__, __LINE__));
       return;    
     }
     FreePool (t);
@@ -413,15 +413,15 @@ MB_MEM_Element_New (
     // Get Manufacturer
     //
     t = MB_Get_String_By_Num ((VOID *)Type17, Type17->Manufacturer); 
-    //    MB_DEBUG ((EFI_D_ERROR, "%a\n", t));
+    //    MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a\n", t));
     if (t == NULL) {
-      MB_DEBUG ((EFI_D_ERROR, "%a(%d): Can't found Processor Version\n", __FUNCTION__, __LINE__));
+      MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d): Can't found Processor Version\n", __FUNCTION__, __LINE__));
       continue;
     }  
     a = NULL;
     a = Xml_Attribute_New ("Manufacturer", t);
     if (a == NULL) {
-      MB_DEBUG ((EFI_D_ERROR, "%a(%d) new Manufacturer error\n", __FUNCTION__, __LINE__));
+      MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new Manufacturer error\n", __FUNCTION__, __LINE__));
       return;    
     }
     FreePool (t);
@@ -432,12 +432,12 @@ MB_MEM_Element_New (
     //
     t = MB_Get_String_By_Num ((VOID *)Type17, Type17->PartNumber); 
     if (t == NULL) {
-      MB_DEBUG ((EFI_D_ERROR, "%a(%d): Can't found Processor Version\n", __FUNCTION__, __LINE__));
+      MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d): Can't found Processor Version\n", __FUNCTION__, __LINE__));
       continue;
     }  
     a = Xml_Attribute_New ("PartNum", t);
     if (a == NULL) {
-      MB_DEBUG ((EFI_D_ERROR, "%a(%d) new version error\n", __FUNCTION__, __LINE__));
+      MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new version error\n", __FUNCTION__, __LINE__));
       return;    
     }
     FreePool (t);
@@ -450,7 +450,7 @@ MB_MEM_Element_New (
     AsciiSPrint (t1, 20, "%d MB", Type17->Size);
     a = Xml_Attribute_New ("Size", t1);
     if (a == NULL) {
-      MB_DEBUG ((EFI_D_ERROR, "%a(%d) new version error\n", __FUNCTION__, __LINE__));
+      MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) new version error\n", __FUNCTION__, __LINE__));
       return;    
     }
 
@@ -502,7 +502,7 @@ MB_Get_Driver_Name(
                   &BindingDriverHandles
                   );
   if (EFI_ERROR (Status)) {
-    MB_DEBUG ((EFI_D_ERROR, "%a(%d): Can't found %g installed\n", __FUNCTION__, __LINE__, &gEfiDriverBindingProtocolGuid));
+    MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d): Can't found %g installed\n", __FUNCTION__, __LINE__, &gEfiDriverBindingProtocolGuid));
     return NULL;
   }
 
@@ -563,7 +563,7 @@ MB_Get_Driver_Name(
                                             &DriverName
                                             );
           }
-          //MB_DEBUG ((EFI_D_ERROR, "%a(%d): %s\n", __FUNCTION__, __LINE__, DriverName));
+          //MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d): %s\n", __FUNCTION__, __LINE__, DriverName));
           if(BestLanguage != NULL) {
             FreePool (BestLanguage);
           }
@@ -643,7 +643,7 @@ MB_Get_Driver_Name(
 
 VOID
 MB_Storage_Element_New (
-  IN XmlElement                            *pE
+  IN XML_ELEMENT                            *pE
 ) 
 {
   EFI_STATUS                    Status;
@@ -663,9 +663,9 @@ MB_Storage_Element_New (
   UINTN                         StorageIndex;
   //UINTN                         StorageStringSize;
   //UINT8                         *StorageStr;
-  XmlAttribute                  *a = NULL;
-  XmlElement                    *eE = NULL;
-  XmlElement                    *e = NULL;
+  XML_ATTRIBUTE                  *a = NULL;
+  XML_ELEMENT                    *eE = NULL;
+  XML_ELEMENT                    *e = NULL;
   //
   // Get every Block IO protocol instance installed in the system
   //
@@ -677,12 +677,12 @@ MB_Storage_Element_New (
                   &Handles
                   );
   if (EFI_ERROR (Status) || (NumHandles == 0)) {
-    MB_DEBUG ((EFI_D_ERROR, "%a(%d): Can't found %g install\n", __FUNCTION__, __LINE__, &gEfiDiskInfoProtocolGuid));
+    MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d): Can't found %g install\n", __FUNCTION__, __LINE__, &gEfiDiskInfoProtocolGuid));
     return;
   }
   eE = Xml_Element_New ("Storage");
   if (eE == NULL) {
-    MB_DEBUG ((EFI_D_ERROR, "%a(%d): safety check error\n", __FUNCTION__, __LINE__));
+    MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d): safety check error\n", __FUNCTION__, __LINE__));
     return;
   }
 
@@ -697,7 +697,7 @@ MB_Storage_Element_New (
                     (VOID **) &DiskInfo
                     );
     if (EFI_ERROR (Status)) {
-      MB_DEBUG ((EFI_D_ERROR, "%a(%d): Can't load %g \n", __FUNCTION__, __LINE__, &gEfiDiskInfoProtocolGuid));
+      MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d): Can't load %g \n", __FUNCTION__, __LINE__, &gEfiDiskInfoProtocolGuid));
       return;
     }
 
@@ -714,13 +714,13 @@ MB_Storage_Element_New (
                          &BufferSize
                          );
       if (EFI_ERROR (Status)) {
-        MB_DEBUG ((EFI_D_ERROR, "%a(%d): Can't get sata identify data\n", __FUNCTION__, __LINE__));
+        MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d): Can't get sata identify data\n", __FUNCTION__, __LINE__));
         continue;
       }
 
       e = Xml_Element_New ("SATA");
       if (e == NULL) {
-        MB_DEBUG ((EFI_D_ERROR, "%a(%d): safety check error\n", __FUNCTION__, __LINE__));
+        MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d): safety check error\n", __FUNCTION__, __LINE__));
         return;
       }
       //
@@ -728,7 +728,7 @@ MB_Storage_Element_New (
       //
       Description = AllocateZeroPool (ATA_IDENTIFY_DATA_MODE_LEN + ATA_IDENTIFY_DATA_SER_LEN + 2);
       if (Description == NULL) {
-        MB_DEBUG ((EFI_D_ERROR, "%a(%d): safety check error\n", __FUNCTION__, __LINE__));
+        MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d): safety check error\n", __FUNCTION__, __LINE__));
         return;
       }
       CopyMem (Description, IdentifyData.ModelName, ATA_IDENTIFY_DATA_MODE_LEN);
@@ -736,7 +736,7 @@ MB_Storage_Element_New (
       Eliminate_Extra_Spaces (Description);
       a = Xml_Attribute_New ("Description", Description);
       if (a == NULL) {
-        MB_DEBUG ((EFI_D_ERROR, "%a(%d): Can't get sata identify data\n", __FUNCTION__, __LINE__));
+        MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d): Can't get sata identify data\n", __FUNCTION__, __LINE__));
         return;
       }
       Xml_Element_Add_Attribute (e, a);
@@ -748,12 +748,12 @@ MB_Storage_Element_New (
                          &BufferSize
                          );
       if (EFI_ERROR (Status)) {
-        MB_DEBUG ((EFI_D_ERROR, "%a(%d): Can't get scsi inquiry data\n", __FUNCTION__, __LINE__));
+        MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d): Can't get scsi inquiry data\n", __FUNCTION__, __LINE__));
         continue;
       }
       e = Xml_Element_New ("SCSI");
       if (e == NULL) {
-        MB_DEBUG ((EFI_D_ERROR, "%a(%d): safety check error\n", __FUNCTION__, __LINE__));
+        MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d): safety check error\n", __FUNCTION__, __LINE__));
         return;
       }
       //
@@ -763,7 +763,7 @@ MB_Storage_Element_New (
       //
       Description = AllocateZeroPool (VENDOR_IDENTIFICATION_LENGTH + PRODUCT_IDENTIFICATION_LENGTH + 2);
       if (Description == NULL) {
-        MB_DEBUG ((EFI_D_ERROR, "%a(%d): safety check error\n", __FUNCTION__, __LINE__));
+        MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d): safety check error\n", __FUNCTION__, __LINE__));
         return;
       }
       CopyMem (Description, &InquiryData.Reserved_5_95[VENDOR_IDENTIFICATION_OFFSET], VENDOR_IDENTIFICATION_LENGTH);
@@ -771,7 +771,7 @@ MB_Storage_Element_New (
       CopyMem (Description, &InquiryData.Reserved_5_95[PRODUCT_IDENTIFICATION_OFFSET], PRODUCT_IDENTIFICATION_LENGTH);
       a = Xml_Attribute_New ("Description", Description);
       if (a == NULL) {
-        MB_DEBUG ((EFI_D_ERROR, "%a(%d): Can't get sata identify data\n", __FUNCTION__, __LINE__));
+        MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d): Can't get sata identify data\n", __FUNCTION__, __LINE__));
         return;
       }
       Xml_Element_Add_Attribute (e, a);
@@ -791,31 +791,31 @@ MB_Storage_Element_New (
       // Get device name by nvme binding drivers, to support some nvme have it's own native driver
       //
       ControllerName = MB_Get_Driver_Name (Handles[StorageIndex], PciHandle);
-      //MB_DEBUG ((EFI_D_ERROR, "%a(%d): %a\n", __FUNCTION__, __LINE__, ControllerName));
+      //MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d): %a\n", __FUNCTION__, __LINE__, ControllerName));
       if (ControllerName == NULL) {
         continue;
       }
       Description = AllocateZeroPool (AsciiStrSize (ControllerName));
       if (Description == NULL) {
-        MB_DEBUG ((EFI_D_ERROR, "%a(%d): safety check error\n", __FUNCTION__, __LINE__));
+        MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d): safety check error\n", __FUNCTION__, __LINE__));
         return;
       }
       Ascii_Str_Cpy (Description, ControllerName);
       Eliminate_Extra_Spaces (Description);
-      //MB_DEBUG ((EFI_D_ERROR, "tank: %a\n",Description));
+      //MB_DEBUG ((DEBUG_LEVEL_ERROR, "tank: %a\n",Description));
       if (ControllerName != NULL) {
         FreePool (ControllerName);
       }
       e = NULL;
       e = Xml_Element_New ("NVME");
       if (e == NULL) {
-        MB_DEBUG ((EFI_D_ERROR, "%a(%d): safety check error\n", __FUNCTION__, __LINE__));
+        MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d): safety check error\n", __FUNCTION__, __LINE__));
         return;
       }
       a = NULL;
       a = Xml_Attribute_New ("Description", Description);
       if (a == NULL) {
-        MB_DEBUG ((EFI_D_ERROR, "%a(%d): Can't get sata identify data\n", __FUNCTION__, __LINE__));
+        MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d): Can't get sata identify data\n", __FUNCTION__, __LINE__));
         return;
       }
       Xml_Element_Add_Attribute (e, a);
@@ -831,7 +831,7 @@ MB_Storage_Element_New (
   //StorageIndex = 0;
   //Xml_Element_Debug_Print (eE, StorageIndex);
   if (Xml_Element_Is_Empty (eE)) {
-    MB_DEBUG ((EFI_D_ERROR, "%a(%d): no storage\n", __FUNCTION__, __LINE__));
+    MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d): no storage\n", __FUNCTION__, __LINE__));
     return;
   }
   Xml_Element_Add_Child (pE, eE);
@@ -839,15 +839,15 @@ MB_Storage_Element_New (
 }
 VOID
 MB_Xml_Write (
-  IN XmlElement *pElement
+  IN XML_ELEMENT *pElement
   )
 {
-  XmlElement                            *e;
-  XmlAttribute                          *a;
+  XML_ELEMENT                            *e;
+  XML_ATTRIBUTE                          *a;
   EFI_STATUS                            Status;
   EFI_SMBIOS_PROTOCOL                   *EfiSmbiosProtocol;
   if (pElement == NULL) { //safety check
-    MB_DEBUG ((EFI_D_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    MB_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return;
   }
   //
@@ -855,7 +855,7 @@ MB_Xml_Write (
   //
   Status = gBS->LocateProtocol(&gEfiSmbiosProtocolGuid, NULL, (VOID **)&EfiSmbiosProtocol);
   if (EFI_ERROR (Status)) {
-    MB_DEBUG ((EFI_D_ERROR, "Locate: %g error\n", &gEfiSmbiosProtocolGuid));
+    MB_DEBUG ((DEBUG_LEVEL_ERROR, "Locate: %g error\n", &gEfiSmbiosProtocolGuid));
   }
 
   e = Xml_Element_New ("MainboardInfoDump");
