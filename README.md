@@ -2,11 +2,9 @@
 Read Write something under shell
 Release Note:
 1.support pci dump
-2.cpu, memory, storage
-3.Hii database parse and vairable modify
 
-  <PciDump version="v0.1">
-    <Device(00:00:00) vendor(1022)="Advanced Micro Devices, Inc. [AMD]" device(15D0)="Unknown Device Id">
+<PciDump version="v0.1">
+   <Device(00:00:00) vendor(1022)="Advanced Micro Devices, Inc. [AMD]" device(15D0)="Unknown Device Id">
       <data 00="22 10 D0 15 00 00 00 00 00 00 00 06 00 00 80 00 " />
       <data 01="00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 " />
       <data 02="00 00 00 00 00 00 00 00 00 00 00 00 22 10 D0 15 " />
@@ -28,7 +26,7 @@ Release Note:
       <status Cap="-" 66MHz="-" UDF="-" FastB2B="-" ParErr="-" DEVSEL="fast" STAbort="-" RTAbort="-" RMAbort="-" SERR="-" PERR="-" INTx="-" />
       <interrupt IntLine="0" IntIRQ="0" />
     </Device(00:00:00)>
-2. suuport onboard information dump
+2. support onboard information dump
 <Dump email="tanktang2018@hotmail.com" aurthor="tank">
   <MainboardInfoDump version="v0.1">
     <BIOS Version="M33KT1BS" date="01/14/2020" />
