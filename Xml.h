@@ -243,6 +243,27 @@ Xml_Element_New (
   IN CHAR8                        *pName
   );
 
+/**
+  Clone a xml element with attribute
+  @param pElement  -- the element pointer
+
+  @retval new clone xml element will returned, null is failed
+**/
+XML_ELEMENT * 
+Xml_Element_Clone_With_Attribute (
+  IN XML_ELEMENT                        *pElement
+  );
+
+/**
+  Clone a xml element
+  @param pElement  -- the element pointer
+
+  @retval new clone xml element will returned, null is failed
+**/
+XML_ELEMENT * 
+Xml_Element_Clone (
+  IN XML_ELEMENT                        *pElement
+  );
 /** 
   xml element destroy all attribute under it
   @param pElement  -- the element pointer
@@ -311,8 +332,59 @@ Xml_Element_Add_Child (
   @retval  xml element attributes, null is failed
 **/
 VOID * 
-Xml_Element_Get_Attributes (
+Xml_Element_Get_Attributes_List (
   IN   XML_ELEMENT               *pElement
+  );
+
+/**
+  get the element attributes by name
+  @param pElement  -- the element
+  @param pName     -- the name of attribute
+  
+  @retval  xml element attributes, null is failed
+**/
+XML_ATTRIBUTE * 
+Xml_Element_Get_Attributes_By_Name (
+  IN  XML_ELEMENT               *pElement,
+  IN  CHAR8                     *pName
+  );
+/**
+  get the element attributes data by name
+  @param pElement  -- the element
+  @param pName     -- the name of attribute
+  
+  @retval  xml element attributes, null is failed
+**/
+CHAR8 * 
+Xml_Element_Get_AttributesData_By_Name (
+  IN  XML_ELEMENT               *pElement,
+  IN  CHAR8                     *pName
+  );
+/**
+  get the element child by name
+  @param pElement  -- the element
+  @param pName     -- the name of child element
+  
+  @retval  xml element child will returned, null is failed
+**/
+XML_ELEMENT * 
+Xml_Element_Get_Child_By_Name (
+  IN  XML_ELEMENT               *pElement,
+  IN  CHAR8                     *pName
+  );
+
+/**
+  get the child element attribute  by name
+  @param pElement       -- the element
+  @param pChildName     -- the name of child element
+  @param pAttrName      -- the name of child attribute
+  @retval  xml element child will returned, null is failed
+**/
+XML_ATTRIBUTE *
+Xml_Element_Get_Child_Attr_By_Name (
+  IN  XML_ELEMENT               *pElement,
+  IN  CHAR8                     *pChildName,  
+  IN  CHAR8                     *pAttrName  
   );
 
 /** 
@@ -850,5 +922,11 @@ Xml_Reader_Parse_Document (
 XML_DOCUMENT * 
 Xml_Reader_Parse (
   IN  CHAR16            *pFileName
+  );
+
+CHAR8 * 
+Xml_Element_Get_AttributesData_By_Name_d (
+  IN  XML_ELEMENT               *pElement,
+  IN  CHAR8                     *pName
   );
 #endif

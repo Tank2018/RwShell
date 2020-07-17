@@ -73,6 +73,7 @@ typedef struct {
   CHAR8                           *Size;
 } HIIVAR_VARSTORE_ITEM;
 
+
 //
 // Hii Debug struct
 //
@@ -246,5 +247,20 @@ VOID
 HiiVar_VarStore_Item_Xml_Write (
   XML_ELEMENT                            *pRoot,
   HIIVAR_STORAGE                        *pStorage
+  );
+
+VOID
+HiiVar_Xml_Document_Parse (
+  IN  XML_DOCUMENT      *pDocument
+  );
+
+VOID
+HiiVar_Xml_Diff_Item_Mapped (
+  IN  XML_ELEMENT          *pElement
+  );
+VOID  
+HiiVar_Xml_HiiDumpInfo_Compare (
+  IN  XML_ELEMENT     *pElement,
+  IN  LIST_ENTRY      *List
   );
 #endif

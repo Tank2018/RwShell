@@ -514,3 +514,21 @@ Clone_Unicode_String (
   return p;
 }
 
+INTN
+EFIAPI
+Ascii_Str_Cmp (
+  IN   CHAR8               *FirstString,
+  IN   CHAR8               *SecondString
+  )
+{
+  UINTN    Index = 0;
+  while ((*FirstString != '\0') && (*FirstString == *SecondString)) {
+    Index ++;
+    FirstString++;
+    SecondString++;
+  }
+  if ((*FirstString - *SecondString) != 0) {
+    return Index;
+  }
+  return 0;
+}

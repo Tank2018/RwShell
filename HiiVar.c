@@ -2,6 +2,7 @@
 
 LIST_ENTRY                      gHiiVarPkgList = INITIALIZE_LIST_HEAD_VARIABLE (gHiiVarPkgList);
 LIST_ENTRY                      gHiiVarStoreItemPkgList = INITIALIZE_LIST_HEAD_VARIABLE (gHiiVarStoreItemPkgList);
+LIST_ENTRY                      gHiiDiffItemPkgList = INITIALIZE_LIST_HEAD_VARIABLE (gHiiDiffItemPkgList);
 UINT8  gDispatchOperand[] = {
   EFI_IFR_FORM_SET_OP,
   EFI_IFR_FORM_OP,
@@ -197,6 +198,68 @@ HiiVar_Get_Item_Vaule (
 }
 
 /**
+  Get the item matched stroage
+
+  @param  pOpcode             -- opcode pointer
+  @retval a string will return if successful, others null.
+
+**/
+VOID *  
+HiiVar_Get_Item_Storage (
+  IN  HIIVAR_OPCODE  *pOpcode
+  )
+{
+  CHAR8                 *pString = NULL;
+  UINTN                 Size;
+  UINT8                 Flags;
+  EFI_IFR_OP_HEADER     *pIfr;
+  HIIVAR_STORAGE        *pStorage;
+  LIST_ENTRY            *Link;
+  UINT16                VarStoreId;
+  UINT16                VarOffset;
+ 
+
+  if (pOpcode == NULL) { //safe checking
+    return NULL;
+  }
+
+  pIfr = (EFI_IFR_OP_HEADER *)HIIVAR_OPCODE_IFRPTR (pOpcode);
+  switch (pIfr->OpCode) {
+    case EFI_IFR_ONE_OF_OP:
+    case EFI_IFR_NUMERIC_OP:
+    case EFI_IFR_CHECKBOX_OP:
+      //
+      // Calc the size , varstoreid , offset of one of item
+      //
+      Flags = ((EFI_IFR_ONE_OF *) pIfr)->Flags;
+      Flags = Flags & EFI_IFR_NUMERIC_SIZE;
+      Size = (UINTN)(1 << Flags);
+      VarStoreId = ((EFI_IFR_ONE_OF *) pIfr)->Question.VarStoreId; 
+      VarOffset = ((EFI_IFR_ONE_OF *) pIfr)->Question.VarStoreInfo.VarOffset;
+      break;
+    default:
+      Size = 0;
+      break;
+  }
+  if (Size == 0) {
+    return NULL;
+  }
+  //
+  // Dispatch all varstore, found matched
+  //
+  Link  = GetFirstNode (&HIIVAR_OPCODE_STROAGELIST(pOpcode));
+  while (!IsNull (&HIIVAR_OPCODE_STROAGELIST(pOpcode), Link)) {
+    pStorage = HIIVAR_STORAGE_FROM_LINK (Link);
+    if (pStorage->StoreId == VarStoreId) {
+      pString = Hex_To_String_Order (pStorage->Data + VarOffset, Size);
+      return pStorage;
+    }
+    Link = GetNextNode (&HIIVAR_OPCODE_STROAGELIST(pOpcode), Link);
+  }
+
+  return NULL;
+}
+/**
   Misc:
   1.Create a current value tag
   2.Create a help tag
@@ -239,15 +302,16 @@ HiiVar_Opcode_Misc_New (
               NULL
               );
   HIIVAR_DEBUG ((DEBUG_LEVEL_INFO, "  help = %a \n", pString));
-  pAttr = HiiVar_Opcode_Attr_New (INFO_ATR_STR, pString);
-  if (pAttr != NULL) {
-    HiiVar_Opcode_Add_Attr (pNewOpcode, pAttr);
+  if (pString != NULL) {
+    pAttr = HiiVar_Opcode_Attr_New (INFO_ATR_STR, pString);
+    if (pAttr != NULL) {
+      HiiVar_Opcode_Add_Attr (pNewOpcode, pAttr);
+    }
+    //
+    // add "help" tag into root
+    //
+    HiiVar_Opcode_Add_Child (pOpcode, pNewOpcode);
   }
-  //
-  // add "help" tag into root
-  //
-  HiiVar_Opcode_Add_Child (pOpcode, pNewOpcode);
-
   //
   // new a tag of current item vaule format as belwo
   // <current value="x"/>
@@ -261,15 +325,38 @@ HiiVar_Opcode_Misc_New (
   InitializeListHead (&pNewOpcode->AttrList);
   InitializeListHead (&pNewOpcode->ChildList);
   //
-  // Add value attr 
+  // Add value attr , if can't get current value, just return
   //
-  HIIVAR_DEBUG ((DEBUG_LEVEL_INFO, "  value = %a \n", HiiVar_Get_Item_Vaule (pOpcode)));
-  pAttr = HiiVar_Opcode_Attr_New (VALUE_ATR_STR, HiiVar_Get_Item_Vaule (pOpcode));
+  pString =  HiiVar_Get_Item_Vaule (pOpcode);
+  if (pString == NULL) return;
+  HIIVAR_DEBUG ((DEBUG_LEVEL_INFO, "  value = %a \n", pString));
+  pAttr = HiiVar_Opcode_Attr_New (VALUE_ATR_STR, pString);
   if (pAttr != NULL) {
     HiiVar_Opcode_Add_Attr (pNewOpcode, pAttr);
   } 
   //
   // add "current" tag into root
+  //
+  HiiVar_Opcode_Add_Child (pOpcode, pNewOpcode);
+
+  //
+  // new a tag of current item vaule format as belwo
+  // <modify value="x"/>
+  // 
+  pNewOpcode = (HIIVAR_OPCODE   *)AllocateZeroPool (sizeof (HIIVAR_OPCODE));
+  if (pNewOpcode == NULL) {
+    return ;
+  }
+  pNewOpcode->Signature = HIIVAR_OPCODE_SIGNATURE;
+  pNewOpcode->Name      = Clone_Ascii_String_WO_SPACE (MODIFY_TAG_STR);
+  InitializeListHead (&pNewOpcode->AttrList);
+  InitializeListHead (&pNewOpcode->ChildList);
+  pAttr = HiiVar_Opcode_Attr_New (VALUE_ATR_STR, pString);
+  if (pAttr != NULL) {
+    HiiVar_Opcode_Add_Attr (pNewOpcode, pAttr);
+  } 
+  //
+  // add "modify" tag into root
   //
   HiiVar_Opcode_Add_Child (pOpcode, pNewOpcode);
   return;
@@ -440,7 +527,7 @@ HiiVar_Opcode_Attr_Dispatch (
       // 5. Add a Len attribute
       //
       pString = HiiVar_Get_Item_Len (pOneOf->Flags);
-      HIIVAR_DEBUG ((DEBUG_LEVEL_ERROR, "len = %a ", pString));
+      HIIVAR_DEBUG ((DEBUG_LEVEL_INFO, "len = %a ", pString));
       if (pString != NULL) {
         pAttr = HiiVar_Opcode_Attr_New (LEN_ATR_STR, pString);
         if (pAttr != NULL) {
@@ -548,10 +635,12 @@ HiiVar_Opcode_Attr_Dispatch (
                   (UINT8 *)(&pNumeric->Question.QuestionId), 
                   sizeof (pNumeric->Question.QuestionId)
                   );
-      HIIVAR_DEBUG ((DEBUG_LEVEL_INFO, "  QuestionId = %a \n", pString));
-      pAttr = HiiVar_Opcode_Attr_New (ID_ATR_STR, pString);
-      if (pAttr != NULL) {
-        HiiVar_Opcode_Add_Attr (pOpcode, pAttr);
+      if (pString != NULL) {
+        HIIVAR_DEBUG ((DEBUG_LEVEL_INFO, "  QuestionId = %a \n", pString));
+        pAttr = HiiVar_Opcode_Attr_New (ID_ATR_STR, pString);
+        if (pAttr != NULL) {
+          HiiVar_Opcode_Add_Attr (pOpcode, pAttr);
+        }
       }
       //
       // 2. Add a name attribute
@@ -563,10 +652,12 @@ HiiVar_Opcode_Attr_Dispatch (
                     NULL), 
                   NULL
                   );
-      HIIVAR_DEBUG ((DEBUG_LEVEL_INFO, "  name = %a \n", pString));
-      pAttr = HiiVar_Opcode_Attr_New (NAME_ATR_STR, pString);
-      if (pAttr != NULL) {
-        HiiVar_Opcode_Add_Attr (pOpcode, pAttr);
+      if (pString != NULL) {
+        HIIVAR_DEBUG ((DEBUG_LEVEL_INFO, "  name = %a \n", pString));
+        pAttr = HiiVar_Opcode_Attr_New (NAME_ATR_STR, pString);
+        if (pAttr != NULL) {
+          HiiVar_Opcode_Add_Attr (pOpcode, pAttr);
+        }
       }
       //
       // 3. Add a type attribute
@@ -588,7 +679,7 @@ HiiVar_Opcode_Attr_Dispatch (
       // 5. Add a Len attribute
       //
       pString = HiiVar_Get_Item_Len (pNumeric->Flags);
-      HIIVAR_DEBUG ((DEBUG_LEVEL_ERROR, "len = %a ", pString));
+      HIIVAR_DEBUG ((DEBUG_LEVEL_INFO, "len = %a ", pString));
       pAttr = HiiVar_Opcode_Attr_New (LEN_ATR_STR, pString);
       if (pAttr != NULL) {
         HiiVar_Opcode_Add_Attr (pOpcode, pAttr);
@@ -683,7 +774,7 @@ HiiVar_Opcode_Attr_Dispatch (
       // 5. Add a Len attribute
       //
       pString = HiiVar_Get_Item_Len (pCheckBox->Flags);
-      HIIVAR_DEBUG ((DEBUG_LEVEL_ERROR, "len = %a ", pString));
+      HIIVAR_DEBUG ((DEBUG_LEVEL_INFO, "len = %a ", pString));
       pAttr = HiiVar_Opcode_Attr_New (LEN_ATR_STR, pString);
       if (pAttr != NULL) {
         HiiVar_Opcode_Add_Attr (pOpcode, pAttr);
@@ -814,6 +905,87 @@ HiiVar_Opcode_Add_Attr (
   //
   InsertTailList (&pOpcode->AttrList, &pAttr->Link);
   return EFI_SUCCESS;
+}
+/**
+  get a attribute under opcode by it's name
+
+  @param  pOpcode             -- a opcode node pointer
+  @param  pName               -- a attribute name string
+
+  @retval a opcode attr will return if found, others null.
+
+**/
+VOID *
+HiiVar_Opcode_Get_Attr_By_Name (
+  IN  HIIVAR_OPCODE        *pOpcode,
+  IN  CHAR8                *pName
+  )
+{
+  LIST_ENTRY                *Link;
+  HIIVAR_OPCODE_ATTR        *pAttr;
+  Link  = GetFirstNode (&pOpcode->AttrList);
+  while (!IsNull (&pOpcode->AttrList, Link)) {
+    pAttr = HIIVAR_ATTR_FROM_LINK (Link);
+    Link = GetNextNode (&pOpcode->AttrList, Link);
+
+    if (AsciiStrCmp (pName, pAttr->Name) == 0) {
+      return pAttr;
+    }
+  }
+  return NULL;
+}
+/**
+  get a child opcode under parent opcode by it's name
+
+  @param  pOpcode             -- a opcode node pointer
+  @param  pName               -- a child opcode string
+
+  @retval a opcode attr will return if found, others null.
+
+**/
+VOID *
+HiiVar_Opcode_Get_Child_By_Name (
+  IN  HIIVAR_OPCODE        *pOpcode,
+  IN  CHAR8                *pName
+  )
+{
+  LIST_ENTRY                *Link;
+  HIIVAR_OPCODE             *pCurrentOpcode;
+  Link  = GetFirstNode (&pOpcode->ChildList);
+  while (!IsNull (&pOpcode->ChildList, Link)) {
+    pCurrentOpcode = HIIVAR_OPCODE_FROM_LINK (Link);
+    Link = GetNextNode (&pOpcode->ChildList, Link);
+
+    if (AsciiStrCmp (pName, pCurrentOpcode->Name) == 0) {
+      return pCurrentOpcode;
+    }
+  }
+  return NULL;
+}
+
+/**
+  get a child attr under parent opcode by it's name
+
+  @param  pOpcode             -- a opcode node pointer
+  @param  pName               -- a child opcode string
+
+  @retval a opcode attr will return if found, others null.
+
+**/
+VOID *
+HiiVar_Opcode_Get_Child_Attr_By_Name (
+  IN  HIIVAR_OPCODE        *pOpcode,
+  IN  CHAR8                *pTagName,
+  IN  CHAR8                *pAttrName
+  )
+{
+  HIIVAR_OPCODE             *pChildOpcode;
+  pChildOpcode = HiiVar_Opcode_Get_Child_By_Name (pOpcode, pTagName);
+  if (pChildOpcode == NULL) {
+    return NULL;
+  }
+  return  HiiVar_Opcode_Get_Attr_By_Name (pChildOpcode, pAttrName);
+  
 }
 /**
   Repeat  dispatch the Ifr binary's opcode of a FormSet.
@@ -1254,7 +1426,7 @@ HiiVar_Formset_New (
              &pHiiVarFormset->IfrBinaryData
              );
   if (EFI_ERROR (Status)) {
-    HIIVAR_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) load the formset data from handle failed\n", __FUNCTION__, __LINE__));
+    //HIIVAR_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) load the formset data from handle failed\n", __FUNCTION__, __LINE__));
     goto ErrExit;
   }
 
@@ -1928,4 +2100,612 @@ HiiVar_VarStore_Item_Xml_Write (
   }
   Xml_Element_Add_Child (pRoot, pElt);
   return ;
+}
+/**
+  Get the question opcode by string
+
+  @param  pString    -- the opcode type string
+
+  @retval a opcode will returned, 0 means not found.
+**/
+UINT8
+HiiVar_Xml_Get_Opcode_By_Type_String (
+  IN  CHAR8    *pString
+  )
+{
+  if (pString == NULL) {
+    HIIVAR_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    return FALSE;
+  }
+  if (AsciiStrCmp (pString, QUESTION_NUMERIC) == 0) {
+    return EFI_IFR_NUMERIC_OP;
+  }
+  if (AsciiStrCmp (pString, QUESTION_CHECKBOX) == 0) {
+    return EFI_IFR_CHECKBOX_OP;
+  }
+  if (AsciiStrCmp (pString, QUESTION_ONE_OF) == 0) {
+    return EFI_IFR_ONE_OF_OP;
+  }
+  return 0;
+}
+
+/**
+  Get current element matched opcode 
+
+  @param  pElement    -- the xml element pointer
+
+  @retval a opcode will returned, 0 means not found.
+**/
+UINT8 
+HiiVar_Xml_Get_Element_Opcode (
+  IN  XML_ELEMENT      *pElement
+  )
+{
+  XML_ATTRIBUTE    *pAttr;
+  if (pElement == NULL) {
+    HIIVAR_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    return FALSE;
+  }
+  //
+  // formset opcode have tag name  "formset"
+  //
+  if (AsciiStrCmp (FORMSET_TAG_STR, pElement->pName) == 0) {
+    return EFI_IFR_FORM_SET_OP;
+  }
+  //
+  // form opcode have tag name  "form"
+  //
+  if (AsciiStrCmp (FORM_TAG_STR, pElement->pName) == 0) {
+    return EFI_IFR_FORM_OP;
+  }
+  //
+  // quesiton opcode have tag name  "quesiton"
+  //
+  if (AsciiStrCmp (QUETION_TAG_STR, pElement->pName) == 0) {
+    pAttr = Xml_Element_Get_Attributes_By_Name (pElement, TYPE_ATR_STR);
+    if (pAttr == NULL) {
+      return 0;
+    }
+    return HiiVar_Xml_Get_Opcode_By_Type_String(pAttr->pValue);
+  }
+  return 0;
+}
+/**
+  check if current xml question is supported and need parsed
+
+  @param  pElement    -- the xml element pointer
+
+  @retval TRUE if support, others FALSE.
+**/
+BOOLEAN
+HiiVar_Xml_Question_Type_Supported (
+  IN  XML_ELEMENT      *pElement
+  )
+{
+
+  UINT8                    Opcode;
+  if (pElement == NULL) {
+    HIIVAR_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    return FALSE;
+  }
+  //
+  // serach current element have "type" attribute
+  //
+  Opcode = HiiVar_Xml_Get_Element_Opcode (pElement);
+  if (Opcode == 0) return FALSE;
+
+  return HiiVar_Is_KnownVarStoreItemOpCode (Opcode);
+}
+/**
+  check if current element have diff value of current and modify tag
+
+  @param  pElement    -- the xml element pointer
+
+  @retval TRUE if support, others FALSE.
+**/
+BOOLEAN 
+HiiVar_Xml_Value_Diff (
+  IN  XML_ELEMENT      *pElement
+  )
+{
+
+  XML_ATTRIBUTE  *pCurrentValueAttr;
+  XML_ATTRIBUTE  *pModifyValueAttr;
+  if (pElement == NULL) {
+    HIIVAR_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    return FALSE;
+  }
+  //
+  // check current is a matched quetion type element
+  //
+  if (!HiiVar_Xml_Question_Type_Supported (pElement)) {
+    return FALSE;
+  }
+
+  //
+  // check current element have current&modify tag, and the value of them 
+  // are different
+  //
+  pCurrentValueAttr = Xml_Element_Get_Child_Attr_By_Name (pElement, CURRENT_TAG_STR, VALUE_ATR_STR);
+  if (pCurrentValueAttr == NULL) {
+    return FALSE;
+  }
+  pModifyValueAttr = Xml_Element_Get_Child_Attr_By_Name (pElement, MODIFY_TAG_STR, VALUE_ATR_STR);
+  if (pModifyValueAttr == NULL) {
+    return FALSE;
+  }
+  if (AsciiStrCmp (pCurrentValueAttr->pValue, pModifyValueAttr->pValue) != 0) return TRUE;
+  
+  return FALSE;
+}
+/**
+  found the diff question item in formset tag
+
+  @param  pElement    -- the xml element pointer
+
+  @retval none.
+**/
+VOID 
+HiiVar_Xml_HiiDumpInfo_Formset_Compare (
+  IN  XML_ELEMENT     *pFormsetElt,
+  IN  XML_ELEMENT     *pElement,
+  IN  BOOLEAN         *HaveDiff
+  )
+{
+
+  XML_ELEMENT          *pChildElt;
+  LIST_ENTRY           *Link;
+  CHAR8                *pString;
+  //
+  // Current question item is differed 
+  //
+  if (HiiVar_Xml_Value_Diff (pElement)) {
+    pString = (CHAR8 *) Xml_Element_Get_AttributesData_By_Name (pElement, NAME_ATR_STR);
+    HIIVAR_DEBUG ((DEBUG_LEVEL_INFO, "a child name : %a in ",pString));
+    pString = (CHAR8 *) Xml_Element_Get_AttributesData_By_Name (pElement, NAME_ATR_STR);
+    HIIVAR_DEBUG ((DEBUG_LEVEL_INFO, "%a formset found\n",pString));
+    Xml_Element_Add_Child (pFormsetElt, Xml_Element_Clone (pElement));
+    *HaveDiff = TRUE;
+  }
+  Link  = GetFirstNode (&pElement->Children);
+  while (!IsNull (&pElement->Children, Link)) {
+    pChildElt = XML_ELEMENT_FROM_LINK (Link);
+    Link = GetNextNode (&pElement->Children, Link);
+    //
+    // serach the diff item under child
+    //
+    HiiVar_Xml_HiiDumpInfo_Formset_Compare (pFormsetElt, pChildElt, HaveDiff);
+  }
+}
+/**
+  found the diff question item in formset tag and formset 
+  and insert it into list
+
+  @param  pElement    -- the xml element pointer
+
+  @retval none.
+**/
+VOID  
+HiiVar_Xml_HiiDumpInfo_Compare (
+  IN  XML_ELEMENT     *pElement,
+  IN  LIST_ENTRY      *List
+  )
+{
+  XML_ELEMENT          *pFormsetElt;
+  XML_ELEMENT          *pChildElt;
+  LIST_ENTRY           *Link;
+  BOOLEAN              HaveDiff = FALSE;
+ // UINTN                Index;
+ // CHAR8                *pString;
+  //
+  // get matched name child element
+  //
+  pFormsetElt = NULL;
+  Link  = GetFirstNode (&pElement->Children);
+  while (!IsNull (&pElement->Children, Link)) {
+    pChildElt = XML_ELEMENT_FROM_LINK (Link); 
+    Link = GetNextNode (&pElement->Children, Link);
+    //
+    // if it's a formset element
+    //
+    if (HiiVar_Xml_Get_Element_Opcode (pChildElt) == EFI_IFR_FORM_SET_OP) {
+      pFormsetElt = Xml_Element_Clone_With_Attribute (pChildElt);
+      if (pFormsetElt == NULL) {
+        continue;
+      }
+      HaveDiff = FALSE;
+      HiiVar_Xml_HiiDumpInfo_Formset_Compare (pFormsetElt, pChildElt, &HaveDiff);
+      if (HaveDiff) {
+        //Xml_Element_Debug_Print (pFormsetElt, Index); 
+        InsertTailList (List, &pFormsetElt->Link);
+
+      } else {
+        //
+        // Free pformsetElt [TANK TO DO]
+        //
+      }
+    }
+  } 
+
+}
+
+/**
+  found the XML element and hii opcode instanced's attribute by it's name
+  and check if they are matched
+
+  @param  pOpcode     -- the hii opcode pointer
+  @param  pElement    -- the xml element pointer
+  @param  pName       -- the attribute name
+
+  @retval TRUE if the value is matched, others failed.
+**/
+BOOLEAN
+HiiVar_Xml_Diff_Attr_Value_Matched_By_Name (
+  IN  HIIVAR_OPCODE        *pOpcode,
+  IN  XML_ELEMENT          *pElement,
+  IN  CHAR8                *pName
+  )
+{
+  CHAR8                       *pEltString;
+  CHAR8                       *pOpcodeString; 
+  //
+  // get xml element attribute value by name
+  //
+  pEltString = Xml_Element_Get_AttributesData_By_Name (pElement, pName);
+  if (pEltString == NULL) {
+    HIIVAR_DEBUG ((DEBUG_LEVEL_INFO, "%a(%d) \n",  __FUNCTION__, __LINE__));
+    return FALSE;
+  } 
+  //
+  // get hii opcode attribute value by name
+  //
+  pOpcodeString = HiiVar_Opcode_GetAttrData_ByName (pOpcode, pName);
+  if (pOpcodeString == NULL) {
+    HIIVAR_DEBUG ((DEBUG_LEVEL_INFO, "%a(%d) \n",  __FUNCTION__, __LINE__));
+    return FALSE;
+  }
+  HIIVAR_DEBUG ((DEBUG_LEVEL_INFO, "%a(%d) %a=%a\n",  __FUNCTION__, __LINE__, pEltString, pOpcodeString));
+  if (AsciiStrCmp (pEltString, pOpcodeString) == 0) return TRUE;
+
+  return FALSE;
+}
+
+/**
+  found the matched hii formset opcode of current XML element formset
+  @param  pElement    -- the xml element pointer
+
+  @retval a hii formset opcode will returned, others NULL.
+**/
+VOID *
+HiiVar_Xml_Diff_FormSet_Mapped (
+  IN  XML_ELEMENT          *pElement
+  )
+{
+  LIST_ENTRY                            *Link;
+  HIIVAR_FORMSET                        *pFormset;
+
+  if (pElement == NULL) {
+    HIIVAR_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    return NULL;
+  }  
+  //
+  // Check current element is a formset
+  //
+  if (HiiVar_Xml_Get_Element_Opcode (pElement) != EFI_IFR_FORM_SET_OP) { 
+    HIIVAR_DEBUG ((DEBUG_LEVEL_ERROR, "this element should been formset name opcode = %x\n",\
+      HiiVar_Xml_Get_Element_Opcode (pElement)));
+    return NULL;
+  }
+  HIIVAR_DEBUG ((DEBUG_LEVEL_INFO, " formset name %a\n",\
+      (CHAR8 *) Xml_Element_Get_AttributesData_By_Name (pElement, NAME_ATR_STR)));
+  //
+  // Link all opcode of formset instance
+  //
+  Link  = GetFirstNode (&gHiiVarPkgList);
+  while (!IsNull (&gHiiVarPkgList, Link)) {
+    pFormset = HIIVAR_FORMSET_FROM_LINK (Link);
+    Link = GetNextNode (&gHiiVarPkgList, Link);
+
+    //
+    // check if "id" string matched
+    //
+    if (!HiiVar_Xml_Diff_Attr_Value_Matched_By_Name (pFormset->Opcode, pElement, ID_ATR_STR)) {
+      continue;
+    }
+    //
+    // check if "name" string matched
+    //
+    if (!HiiVar_Xml_Diff_Attr_Value_Matched_By_Name (pFormset->Opcode, pElement, NAME_ATR_STR)) {
+      continue;
+    }
+
+    return pFormset;
+  }
+  return NULL;
+}
+
+/**
+  found the matched hii question opcode of current XML element question
+  @param  pOpcode     -- the hii opcode pointer
+  @param  pElement    -- the xml element pointer
+
+  @retval a hii question opcode will returned, others NULL.
+**/
+VOID *
+HiiVar_Xml_Diff_Opcode_Mapped (
+  IN  HIIVAR_OPCODE        *pOpcode,
+  IN  XML_ELEMENT          *pElement
+  )
+{
+  HIIVAR_OPCODE               *pCurrentOpcode;
+  HIIVAR_OPCODE               *pMatchedOpcode;
+  LIST_ENTRY                  *Link;
+  //
+  // Id name type matched
+  //
+  if (HiiVar_Xml_Diff_Attr_Value_Matched_By_Name (pOpcode, pElement, ID_ATR_STR) &&
+      HiiVar_Xml_Diff_Attr_Value_Matched_By_Name (pOpcode, pElement, NAME_ATR_STR) && 
+      HiiVar_Xml_Diff_Attr_Value_Matched_By_Name (pOpcode, pElement, TYPE_ATR_STR)){
+    return pOpcode;
+  }
+  Link  = GetFirstNode (&pOpcode->ChildList);
+  while (!IsNull (&pOpcode->ChildList, Link)) {
+    pCurrentOpcode = HIIVAR_OPCODE_FROM_LINK (Link);
+    Link = GetNextNode (&pOpcode->ChildList, Link);
+    pMatchedOpcode = HiiVar_Xml_Diff_Opcode_Mapped (pCurrentOpcode, pElement);
+    if (pMatchedOpcode != NULL) {
+      return pMatchedOpcode;
+    }
+  }
+  return NULL;
+}
+
+/**
+  update the modify value into variable
+  @param  pOpcode     -- the hii opcode pointer
+  @param  pElement    -- the xml element pointer
+
+  @retval none.
+**/
+VOID
+HiiVar_Xml_Diff_Item_Update_Value (
+  IN  XML_ELEMENT          *pElement,
+  IN  HIIVAR_OPCODE        *pOpcode
+  )
+{
+  HIIVAR_STORAGE                        *pStorage;
+  EFI_STATUS                            Status;
+  XML_ATTRIBUTE                         *pXmlAttr;
+  EFI_IFR_OP_HEADER                     *pIfr;
+  UINT8                                 Size;
+  UINT8                                 *VarData;
+  UINTN                                 VarSize;  
+  UINT32                                VarAttr; 
+  UINT8                                 Flags;
+  UINTN                                 Value;
+  UINTN                                 VarValue; 
+  UINT16                                VarOffset;
+  pXmlAttr = Xml_Element_Get_Child_Attr_By_Name (pElement, MODIFY_TAG_STR, VALUE_ATR_STR);
+  if (pXmlAttr == NULL) {
+    HIIVAR_DEBUG ((DEBUG_LEVEL_ERROR, "Can't found modify in XML\n"));
+    return;
+  }
+  HIIVAR_DEBUG ((DEBUG_LEVEL_ALL, "%a value = %a", \
+    Xml_Element_Get_AttributesData_By_Name (pElement, NAME_ATR_STR),\
+    pXmlAttr->pValue
+    ));
+  Value = AsciiStrHexToUintn (pXmlAttr->pValue);
+  pStorage = HiiVar_Get_Item_Storage (pOpcode);
+  if (pStorage == NULL) {
+    HIIVAR_DEBUG ((DEBUG_LEVEL_ERROR, " can't found matched storage\n"));
+    return;
+  }
+  
+  pIfr = (EFI_IFR_OP_HEADER *)HIIVAR_OPCODE_IFRPTR (pOpcode);
+  switch (pIfr->OpCode) {
+    case EFI_IFR_ONE_OF_OP:
+    case EFI_IFR_NUMERIC_OP:
+    case EFI_IFR_CHECKBOX_OP:
+      //
+      // Calc the size , varstoreid , offset of one of item
+      //
+      Flags = ((EFI_IFR_ONE_OF *) pIfr)->Flags;
+      Flags = Flags & EFI_IFR_NUMERIC_SIZE;
+      Size = (UINTN)(1 << Flags);
+      VarOffset = ((EFI_IFR_ONE_OF *) pIfr)->Question.VarStoreInfo.VarOffset;
+      break;
+    default:
+      Size = 0;
+      break;
+  }
+  VarSize = 0;
+  Status = gRT->GetVariable (
+                  pStorage->Name,
+                  &pStorage->Guid, 
+                  &VarAttr,
+                  &VarSize, 
+                  VarData
+                  );
+  if (Status == EFI_BUFFER_TOO_SMALL) {
+    VarData = AllocateZeroPool (VarSize);
+    Status = gRT->GetVariable (
+                    pStorage->Name,
+                    &pStorage->Guid, 
+                    &VarAttr,
+                    &VarSize, 
+                    VarData
+                    );
+  }
+  if (EFI_ERROR (Status)) {
+    HIIVAR_DEBUG ((DEBUG_LEVEL_ERROR, "get %s failed status = %r\n", pStorage->Name, Status));
+    return;
+  }
+  switch (Size)  {
+    case 1:
+      VarValue = *(VarData + VarOffset);
+      *(VarData + VarOffset)=(UINT8) Value;
+      break;
+    case 2:
+      VarValue = *(UINT16 *)(VarData + VarOffset);
+      *(UINT16 *)(VarData + VarOffset)=(UINT16) Value;
+      break;
+    case 4:
+      VarValue = *(UINT32 *)(VarData + VarOffset);
+      *(UINT32 *)(VarData + VarOffset)=(UINT32) Value;
+      break;  
+    case 8:
+      VarValue = *(UINT64 *)(VarData + VarOffset);
+      *(UINT64 *)(VarData + VarOffset)=(UINT64) Value;
+      break;       
+    default:
+      break;
+  }
+  if (VarValue == Value) {
+    HIIVAR_DEBUG ((DEBUG_LEVEL_ALL, ", as same in storage L\"%s\" \n", pStorage->Name));
+    return;
+  }
+  HIIVAR_DEBUG ((DEBUG_LEVEL_ALL, ", not equals to value = %x in variable L\"%s\" \n", VarValue, pStorage->Name));
+  Status = gRT->SetVariable (
+                  pStorage->Name, 
+                  &pStorage->Guid,
+                  VarAttr,
+                  VarSize, 
+                  VarData
+                  );
+  if (EFI_ERROR (Status)) {
+    HIIVAR_DEBUG ((DEBUG_LEVEL_ERROR, "SET %s failed status = %r\n", pStorage->Name, Status));
+    return;
+  }  
+  HIIVAR_DEBUG ((DEBUG_LEVEL_ALL, "Update %s status = %r\n", pStorage->Name, Status));
+  HIIVAR_DEBUG ((DEBUG_LEVEL_ALL, "you may reset it to make it make sence\n"));
+}
+
+/**
+  Found item matched opcode and the formset it belong to.
+
+  @param  pElement    -- the pElement of diff formset element
+
+  @retval none. 
+**/
+VOID
+HiiVar_Xml_Diff_Item_Mapped (
+  IN  XML_ELEMENT          *pElement
+  )
+{
+  XML_ELEMENT                           *pQuestionElt;
+  HIIVAR_OPCODE                         *pOpcode;
+  HIIVAR_FORMSET                        *pFormset;
+  LIST_ENTRY                            *Link;
+  //UINTN                                 Index = 0;
+  
+
+  if (pElement == NULL) {
+    HIIVAR_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    return;
+  } 
+  //Xml_Element_Debug_Print (pElement, Index);
+  pFormset = HiiVar_Xml_Diff_FormSet_Mapped (pElement);
+  if (pFormset == NULL) {
+    HIIVAR_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    return;
+  } 
+  Link  = GetFirstNode (&pElement->Children);
+  while (!IsNull (&pElement->Children, Link)) {
+    pQuestionElt = XML_ELEMENT_FROM_LINK (Link);
+    Link = GetNextNode (&pElement->Children, Link);
+    //
+    // Found matched opcode with current element.
+    //
+    pOpcode = HiiVar_Xml_Diff_Opcode_Mapped (pFormset->Opcode, pQuestionElt);
+    if (pOpcode == NULL) {
+      HIIVAR_DEBUG ((DEBUG_LEVEL_ERROR, "%a not found \n", Xml_Element_Get_Attributes_By_Name (pQuestionElt, NAME_ATR_STR)));
+      continue;
+    }
+    HiiVar_Xml_Diff_Item_Update_Value (pQuestionElt, pOpcode);
+  }
+}
+
+/**
+  Found item matched opcode instance and set it into variable
+
+  @param  List    -- the diff item list
+
+  @retval none. 
+**/
+VOID
+HiiVar_Xml_Diff_Item_Prase (
+  LIST_ENTRY   *List
+  )
+{
+  XML_ELEMENT            *pElement;
+  LIST_ENTRY             *Link;
+  //UINTN                  Index = 0;
+  if (IsListEmpty (List)) return;
+  Link  = GetFirstNode (List);
+  while (!IsNull (List, Link)) {
+    pElement = XML_ELEMENT_FROM_LINK (Link);
+    //Xml_Element_Debug_Print (pElement, Index);
+    HiiVar_Xml_Diff_Item_Mapped (pElement);
+    Link = GetNextNode (List, Link);
+  }
+}
+
+/**
+  Prase the input document for hii variable,
+  Set the diff item in it.
+
+  @param  pDocument  -- the document pointer
+
+  @retval none. 
+**/
+VOID
+HiiVar_Xml_Document_Parse (
+  IN  XML_DOCUMENT      *pDocument
+  )
+{
+  XML_ELEMENT          *pElement;
+  XML_ELEMENT          *pElt;
+  LIST_ENTRY           List;
+  if (pDocument == NULL) {
+    HIIVAR_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    return;
+  }
+
+  //
+  // Get root element of document
+  //
+  pElement = Xml_Document_Get_Root (pDocument);
+  if (pElement == NULL) {
+    HIIVAR_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    return;
+  }
+
+  //
+  // Init diff item list
+  //
+  InitializeListHead (&List);
+
+  //
+  // get HiiVarInfoDump tag and prase the element under it.
+  //
+  pElt = Xml_Element_Get_Child_By_Name (pElement, "HiiVarInfoDump");
+  if (pElt != NULL) {
+    HiiVar_Xml_HiiDumpInfo_Compare (pElt, &List);
+  } else {
+    HIIVAR_DEBUG ((DEBUG_LEVEL_ERROR, "HiiVarInfoDump not found\n"));
+    return ;
+  }
+
+  //
+  // dispatch all opcode current
+  //
+  HiiVar_Formset_Dispatch ();
+
+  //
+  // prase all diff item
+  //
+  HiiVar_Xml_Diff_Item_Prase (&List);
+  
+  
+  
 }

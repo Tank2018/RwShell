@@ -171,9 +171,10 @@ DumpEntryPoint (
   IN  EFI_SYSTEM_TABLE  *SystemTable
   )
 {
-#if 1
+
   XML_APPENDABLE                         *pAppendable;
   XML_DOCUMENT                           *pDocument;
+  XML_DOCUMENT                           *pReadDocument;
   XML_ELEMENT                            *pElement;
   XML_ATTRIBUTE                          *pAttribute;
   UINT8                                   Command = 0;
@@ -221,19 +222,11 @@ DumpEntryPoint (
     pDocument
   );
   if (Command & FILE_COMPARE) {
-    Xml_Reader_Parse (pFileName);
+    pReadDocument = Xml_Reader_Parse (pFileName);
+    HiiVar_Xml_Document_Parse (pReadDocument);
   } else {
     File_Write (pFileName, pAppendable->pPtr, AsciiStrLen (pAppendable->pPtr));
   }
-#else
-CHAR8  *p="ort,\
-\
-\
-T";
-for (UINT8 i = 0; i < AsciiStrSize (p); i ++) {
-  Print(L"%X", p[i]);
-}
 
-#endif
 	return EFI_SUCCESS;
 }

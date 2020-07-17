@@ -171,7 +171,25 @@ Xml_Attribute_New (
 
   return pAttr;
 }
+/**
+  Clone a xml attribute 
+  @param pName  -- the name of the attribute
+  @param pValue -- the value of the attribute
 
+  @retval new xml attribute, null is failed
+**/
+XML_ATTRIBUTE *
+Xml_Attribute_Clone (
+  IN   XML_ATTRIBUTE  *pAttribute
+  )
+{
+  if (pAttribute == NULL) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    return NULL;
+  }
+  return Xml_Attribute_New (pAttribute->pName, pAttribute->pValue);
+
+}
 /**
   Free a xml attribute
   @param pAttribute  -- the  attribute pool to free
@@ -263,6 +281,70 @@ Xml_Element_New (
   return pElt;
 }
 
+/**
+  Clone a xml element
+  @param pElement  -- the element pointer
+
+  @retval new clone xml element will returned, null is failed
+**/
+XML_ELEMENT * 
+Xml_Element_Clone_With_Attribute (
+  IN XML_ELEMENT                        *pElement
+  )
+{
+  XML_ELEMENT       *pElt;
+  LIST_ENTRY        *Link;
+  XML_ATTRIBUTE     *pAttr;
+  if (pElement == NULL) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    return NULL;
+  }
+
+  pElt = (XML_ELEMENT *) Xml_Element_New (pElement->pName);
+  if (pElt == NULL) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    return NULL;
+  }
+  Link  = GetFirstNode (&pElement->Attributes);
+  while (!IsNull (&pElement->Attributes, Link)) {
+    pAttr = XML_ATTRIBUTE_FROM_LINK (Link);
+    XML_DEBUG ((DEBUG_LEVEL_INFO, "%a %a=%a\n", __FUNCTION__, pAttr->pName, pAttr->pValue));
+    pAttr = Xml_Attribute_Clone (pAttr);
+    Link = GetNextNode (&pElement->Attributes, Link);
+    InsertTailList (&pElt->Attributes, &pAttr->Link);
+  }
+  return pElt;
+}
+
+
+/**
+  Clone a xml element
+  @param pElement  -- the element pointer
+
+  @retval new clone xml element will returned, null is failed
+**/
+XML_ELEMENT * 
+Xml_Element_Clone (
+  IN XML_ELEMENT                        *pElement
+  )
+{
+  XML_ELEMENT       *pElt;
+  XML_ELEMENT       *pChild;
+  LIST_ENTRY        *Link;
+  pElt = (XML_ELEMENT *) Xml_Element_Clone_With_Attribute (pElement);
+  if (pElt == NULL) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    return NULL;
+  }
+  Link  = GetFirstNode (&pElement->Children);
+  while (!IsNull (&pElement->Children, Link)) {
+    pChild = XML_ELEMENT_FROM_LINK (Link);
+    pChild = Xml_Element_Clone (pChild);
+    Xml_Element_Add_Child (pElt, pChild);
+    Link = GetNextNode (&pElement->Children, Link);
+  }
+  return pElt;
+}
 /** 
   xml element destroy all attribute under it
   @param pElement  -- the element pointer
@@ -402,7 +484,7 @@ Xml_Element_Add_Child (
   @retval  xml element attributes, null is failed
 **/
 VOID * 
-Xml_Element_Get_Attributes (
+Xml_Element_Get_Attributes_List (
   IN  XML_ELEMENT               *pElement
   )
 {
@@ -410,10 +492,177 @@ Xml_Element_Get_Attributes (
     XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
     return NULL;
   }
-
+  
   return (VOID *) &(pElement->Attributes);
 }
 
+/**
+  get the element attributes by name
+  @param pElement  -- the element
+  @param pName     -- the name of attribute
+  
+  @retval  xml element attributes, null is failed
+**/
+XML_ATTRIBUTE * 
+Xml_Element_Get_Attributes_By_Name (
+  IN  XML_ELEMENT               *pElement,
+  IN  CHAR8                     *pName
+  )
+{
+  LIST_ENTRY          *Link;
+  XML_ATTRIBUTE       *pAttribute;
+  if (pElement == NULL) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    return NULL;
+  }
+  //
+  // get matched name attribute 
+  //
+  Link  = GetFirstNode (&pElement->Attributes);
+  while (!IsNull (&pElement->Attributes, Link)) {
+    pAttribute = XML_ATTRIBUTE_FROM_LINK (Link);
+    Link = GetNextNode (&pElement->Attributes, Link);
+    if (AsciiStrCmp (pName, pAttribute->pName) == 0) return pAttribute;
+  }
+  return NULL;
+}
+
+XML_ATTRIBUTE * 
+Xml_Element_Get_Attributes_By_Name_D (
+  IN  XML_ELEMENT               *pElement,
+  IN  CHAR8                     *pName
+  )
+{
+  LIST_ENTRY          *Link;
+  XML_ATTRIBUTE       *pAttribute;
+    CHAR8               *FirstString;
+    CHAR8               *SecondString;
+  if (pElement == NULL) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    return NULL;
+  }
+  //
+  // get matched name attribute 
+  //
+  Link  = GetFirstNode (&pElement->Attributes);
+  while (!IsNull (&pElement->Attributes, Link)) {
+    pAttribute = XML_ATTRIBUTE_FROM_LINK (Link);
+    Link = GetNextNode (&pElement->Attributes, Link);
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a=%a\n", pAttribute->pName, pAttribute->pValue));
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a=%a %x\n", pAttribute->pName, pName, AsciiStrCmp (pName, pAttribute->pName)));
+    FirstString = pName;
+    SecondString = pAttribute->pName;
+    while ((*FirstString != '\0') && (*FirstString == *SecondString)) {
+      Print (L"%x %x\n", *FirstString, *SecondString);
+      FirstString++;
+      SecondString++;
+    }
+    Print (L"%x %x\n", *FirstString, *SecondString);
+    if (AsciiStrCmp (pName, pAttribute->pName) == 0) return pAttribute;
+  }
+  return NULL;
+}
+/**
+  get the element attributes data by name
+  @param pElement  -- the element
+  @param pName     -- the name of attribute
+  
+  @retval  xml element attributes, null is failed
+**/
+CHAR8 * 
+Xml_Element_Get_AttributesData_By_Name (
+  IN  XML_ELEMENT               *pElement,
+  IN  CHAR8                     *pName
+  )
+{
+  XML_ATTRIBUTE       *pAttribute;
+  pAttribute = Xml_Element_Get_Attributes_By_Name (pElement, pName);
+  if (pAttribute == NULL) return NULL;
+
+  return pAttribute->pValue;
+}
+
+CHAR8 * 
+Xml_Element_Get_AttributesData_By_Name_d (
+  IN  XML_ELEMENT               *pElement,
+  IN  CHAR8                     *pName
+  )
+{
+  XML_ATTRIBUTE       *pAttribute;
+  pAttribute = Xml_Element_Get_Attributes_By_Name_D (pElement, pName);
+  if (pAttribute == NULL) return NULL;
+
+  return pAttribute->pValue;
+}
+/**
+  get the element child by name
+  @param pElement  -- the element
+  @param pName     -- the name of child element
+  
+  @retval  xml element child will returned, null is failed
+**/
+XML_ELEMENT * 
+Xml_Element_Get_Child_By_Name (
+  IN  XML_ELEMENT               *pElement,
+  IN  CHAR8                     *pName
+  )
+{
+  LIST_ENTRY          *Link;
+  XML_ELEMENT         *pChild;
+  if (pElement == NULL) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    return NULL;
+  }
+  //
+  // get matched name child element
+  //
+  Link  = GetFirstNode (&pElement->Children);
+  while (!IsNull (&pElement->Children, Link)) {
+    pChild = XML_ELEMENT_FROM_LINK (Link);
+    Link = GetNextNode (&pElement->Children, Link);
+    if (AsciiStrCmp (pName, pChild->pName) == 0) return pChild;
+  }
+  return NULL;
+}
+
+/**
+  get the child element attribute  by name
+  @param pElement       -- the element
+  @param pChildName     -- the name of child element
+  @param pAttrName      -- the name of child attribute
+  @retval  xml element child will returned, null is failed
+**/
+XML_ATTRIBUTE *
+Xml_Element_Get_Child_Attr_By_Name (
+  IN  XML_ELEMENT               *pElement,
+  IN  CHAR8                     *pChildName,  
+  IN  CHAR8                     *pAttrName  
+  )
+{
+  XML_ELEMENT         *pChild;
+  XML_ATTRIBUTE       *pAttr;
+  if ((pElement == NULL) || (pChildName == NULL) || (pAttrName == NULL)) { //safety check
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "%a(%d) safety check error\n", __FUNCTION__, __LINE__));
+    return NULL;
+  }
+  //
+  // get matched element
+  //
+  pChild = Xml_Element_Get_Child_By_Name (pElement, pChildName);
+  if (pChild == NULL) {
+    return NULL;
+  }
+
+  //
+  // get matched attribute
+  //
+  pAttr = Xml_Element_Get_Attributes_By_Name (pChild, pAttrName);
+  if (pAttr == NULL) {
+    return NULL;
+  }
+  return pAttr;
+
+}
 /** 
   check if a element's child element is empty or not
   @param pElement     -- the element
@@ -455,7 +704,7 @@ Xml_Element_Debug_Print_Element (
   for (Index = 0; Index < IndentIndex; Index++) {
     XML_DEBUG ((DEBUG_LEVEL_ERROR, "  "));
   }
-  XML_DEBUG ((DEBUG_LEVEL_ERROR, "e:%a\n", pElement->pName));
+  XML_DEBUG ((DEBUG_LEVEL_ERROR, "e:%a(%x)\n", pElement->pName, (UINTN)pElement->pName));
 
 
   Link  = GetFirstNode (&pElement->Attributes);
@@ -465,7 +714,7 @@ Xml_Element_Debug_Print_Element (
     for (Index = 0; Index < IndentIndex; Index++) {
       XML_DEBUG ((DEBUG_LEVEL_ERROR, "  "));
     }
-    XML_DEBUG ((DEBUG_LEVEL_ERROR, "  a:%a = %a\n", pAttr->pName, pAttr->pValue));
+    XML_DEBUG ((DEBUG_LEVEL_ERROR, "  a:%a(%x) = %a(%x)\n", pAttr->pName, (UINTN)pAttr->pName, pAttr->pValue,  (UINTN)pAttr->pValue));
   }
 }
 
